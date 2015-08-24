@@ -1,0 +1,56 @@
+# This is the main configuration file of your Dancer2 app
+# env-related settings should go to environments/$env.yml
+# all the settings in this file will be loaded at Dancer's startup.
+
+# Your application's name
+appname: "Admonitor"
+
+# The default layout to use for your application (located in
+# views/layouts/main.tt)
+layout: "main"
+
+# when the charset is set to UTF-8 Dancer2 will handle for you
+# all the magic of encoding and decoding. You should not care
+# about unicode within your app when this setting is set (recommended).
+charset: "UTF-8"
+
+# template engine
+# simple: default and very basic template engine
+# template_toolkit: TT
+
+template: "template_toolkit"
+
+session: "YAML"
+
+engines:
+  session:
+    YAML:
+      session_dir: "/tmp/dancer-sessions"
+      cookie_duration: 7200
+
+admonitor:
+#  ssl:
+#    ca_file: /etc/ssl/certs/mycert.pem
+  default_port: 9099
+  plugins:
+    agents:
+      Memory:
+        enabled: 1
+      CPU:
+        enabled: 1
+      Disk:
+        enabled: 1
+
+plugins:
+  DBIC:
+    default:
+      dsn: dbi:mysql:database=admonitor;mysql_enable_utf8=1;host=localhost
+      schema_class: Admonitor::Schema
+      user: admonitor
+      pass: XXX
+      options:
+        RaiseError: 1
+        PrintError: 1
+        quote_names: 1
+        mysql_enable_utf8: 1 # or  pg_enable_utf8: 1
+

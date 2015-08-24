@@ -1,0 +1,46 @@
+<div>
+    <form method="post">
+        <p>Start: <input type="text" name="start" class="datepicker"></p>
+        <p>End: <input type="text" name="end" class="datepicker"></p>
+        <input type="submit" name="submit" value="update">
+    </form>
+</div>
+
+[% FOREACH plug IN plugins %]
+    <h2>[% plug %]</h2>
+    <canvas id="chart[% plug %]" width="400" height="200"></canvas>
+[% END %]
+
+
+<script type="text/javascript">
+
+    $(document).ready(function(){
+        $(function() {
+            $( ".datepicker" ).datepicker({ dateFormat: "yy-mm-dd" });
+        });
+
+        var mychart;
+
+        [% count = 1 %]
+        [% FOREACH plug IN plugins %]
+            var ctx[% count %] = document.getElementById("chart[% plug %]").getContext("2d");
+
+            jQuery.getJSON('/data/[% plug %]', function( data ) {
+                mychart = new Chart(ctx[% count %]).Scatter(data, {
+                    scaleOverride: true,
+                    scaleStartValue: 0,
+                    scaleSteps: 10,
+                    scaleStepWidth: 10,
+                    scaleType: "date",
+                    scaleDateFormat: "mmm d",
+                    scaleTimeFormat: "h:MM",
+                    scaleDateTimeFormat: "mmm d, yyyy, hh:MM",
+                    scaleBeginAtZero: true,
+                });
+            });
+            [% count = count + 1 %]
+        [% END %]
+    });
+
+</script>
+
