@@ -1,0 +1,12 @@
+agents:
+    - CPU
+    - Memory
+    - Disk
+#read_interval: 900
+#port: 9099
+password: secret
+#hostname: myhost.com
+ssl:
+#    ca_file:
+    cert_file: /etc/ssl/certs/mydomain.pem
+    key_file: /etc/ssl/private/mydomain.key
