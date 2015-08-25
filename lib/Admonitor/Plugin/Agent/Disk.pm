@@ -22,6 +22,7 @@ use strict;
 use warnings;
 
 use Moo;
+use Sys::Statistics::Linux;
 
 extends 'Admonitor::Plugin::Agent';
 
@@ -37,6 +38,16 @@ has stattypes => (
         ],
     },
 );
+
+sub read
+{   my $self  = shift;
+    my $lxs   = Sys::Statistics::Linux->new(diskusage => 1);
+    my $stat  = $lxs->get;
+    my $value = $stat->diskusage;
+    {
+        diskusage => $value,
+    };
+}
 
 sub write
 {   my ($self, $data) = @_;

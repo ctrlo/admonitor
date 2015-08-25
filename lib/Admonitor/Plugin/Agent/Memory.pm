@@ -38,6 +38,15 @@ has stattypes => (
     },
 );
 
+sub read
+{   my $self = shift;
+    my $lxs = Sys::Statistics::Linux->new(memstats => 1);
+    my $stat = $lxs->get;
+    {
+        memusedper => $stat->memstats->{memusedper},
+    };
+}
+
 sub write
 {   my ($self, $data) = @_;
     $self->write_single('memusedper', undef, $data->{memusedper});

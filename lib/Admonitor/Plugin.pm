@@ -7,6 +7,8 @@ use Admonitor::Hosts;
 use DateTime::Format::Strptime;
 use Moo;
 
+use overload '""'  => '_as_string';
+
 # datetime and host_id are used to store the relevant values
 # for the record about to be written. They are not passed in
 # with write_single() so that the values are not needed by
@@ -142,6 +144,8 @@ sub _build_name
     $name =~ s/.*::(.*::.*)/$1/;
     $name;
 }
+
+sub _as_string { $_[0]->name; }
 
 1;
 

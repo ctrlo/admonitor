@@ -23,8 +23,7 @@ use Moo;
 extends 'Admonitor::Plugin';
 
 has schema => (
-    is       => 'ro',
-    required => 1,
+    is => 'ro',
 );
 
 1;
