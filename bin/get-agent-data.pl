@@ -24,26 +24,41 @@ use warnings;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 
-use IO::Socket::SSL;
-use JSON;
+use Log::Report mode => 'DEBUG';
 use Dancer2;
 use Dancer2::Plugin::DBIC;
+use IO::Socket::SSL;
+use JSON;
 
 my @hosts = rset('Host')->all;
 
 foreach my $host (@hosts)
 {
+    trace __x"Processing {host}", host => $host->name;
+    try { do_host($host) };
+    if (my $exception = $@->wasFatal)
+    {
+        $exception->throw(is_fatal => 0);
+    }
+    else {
+        $@->reportAll;
+    }
+}
+
+
+sub do_host
+{   my $host = shift;
+
     my $alarms; # Stop multiple alarms
     my $client = IO::Socket::SSL->new(
         SSL_ca_file  => config->{admonitor}->{ssl}->{ca_file},
         PeerHost     => $host->name,
         PeerPort     => $host->port || config->{admonitor}->{default_port} || 9099,
-    )
-        or die "$! SSL error=$SSL_ERROR";
+    ) or failure "$! SSL error=$SSL_ERROR";
 
     print $client $host->password."\n";
     <$client> eq "OK\n"
-        or die "Authentication failed";
+        or error "Authentication failed";
 
     my $serverdata = decode_json <$client>;
 
