@@ -1,0 +1,10 @@
+apt-get install libsys-statistics-linux-perl
+apt-get install libdbd-sqlite3-perl
+cp -a lib/Admonitor /usr/local/share/perl/5.20.2/
+cp bin/admonitor-agent.pl /usr/local/bin/
+cp etc/admonitor.service /etc/systemd/system/
+systemctl enable admonitor.service
+groupadd --system admonitor
+useradd --system -g admonitor admonitor
+mkdir /etc/admonitor
+cp etc/agent.yaml /etc/admonitor/
