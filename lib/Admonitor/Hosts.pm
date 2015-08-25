@@ -23,5 +23,20 @@ sub _build_all
     \@hosts;
 }
 
+has _index => (
+    is => 'lazy',
+);
+
+sub _build__index
+{   my $self = shift;
+    my %index = map { $_->id => $_ } @{$self->all};
+    \%index;
+}
+
+sub host
+{   my ($self, $id) = @_;
+    $self->_index->{$id};
+}
+
 1;
 

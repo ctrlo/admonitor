@@ -5,6 +5,7 @@ use warnings;
 
 use Admonitor::Hosts;
 use DateTime::Format::Strptime;
+use Mail::Message;
 use Moo;
 
 use overload '""'  => '_as_string';
@@ -50,6 +51,17 @@ has end => (
     },
 );
 
+has _hosts => (
+    is => 'lazy',
+);
+
+sub _build__hosts
+{   my $self = shift;
+    my $hosts = Admonitor::Hosts->new(
+        schema => $self->schema,
+    );
+}
+
 has graph_data => (
     is => 'lazy',
 );
@@ -75,10 +87,7 @@ sub _build_graph_data
     push @$group, $self->schema->resultset('Statval')->dt_SQL_pluck({ -ident => '.datetime' }, 'hour')
         unless $diff->months || $diff->years; # Less than a month
 
-    my $hosts = Admonitor::Hosts->new(
-        schema => $self->schema,
-    );
-
+    my $hosts = $self->_hosts;
     my @series;
 
     foreach my $host (@{$hosts->all})
@@ -132,6 +141,21 @@ sub _build_graph_data
         }
     }
     \@series;
+}
+
+# Default handler for no alarm condition in plugin
+sub alarm {}
+
+sub send_alarm
+{   my ($self, $error) = @_;
+    my $hostname = $self->_hosts->host($self->host_id)->name;
+    my $body = "An alarm was received for host $hostname: $error";
+    my $msg = Mail::Message->build(
+        To      => 'root',
+        Subject => "Admonitor alarm",
+        data    => $body,
+    )->send(via => 'sendmail');
+    1; # Report that an alarm has been sent
 }
 
 has name => (

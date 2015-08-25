@@ -52,5 +52,11 @@ sub write
     $self->write_single('memusedper', undef, $data->{memusedper});
 }
 
+sub alarm
+{   my ($self, $data) = @_;
+    $self->send_alarm("Memory usage above 85% ($data->{memusedper}%)")
+        if $data->{memusedper} > 85;
+}
+
 1;
 

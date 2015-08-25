@@ -33,6 +33,7 @@ my @hosts = rset('Host')->all;
 
 foreach my $host (@hosts)
 {
+    my $alarms; # Stop multiple alarms
     my $client = IO::Socket::SSL->new(
         SSL_ca_file  => config->{admonitor}->{ssl}->{ca_file},
         PeerHost     => $host->name,
@@ -64,7 +65,9 @@ foreach my $host (@hosts)
                 or next;
             $plugin->datetime($time);
             $plugin->host_id($host->id);
-            $plugin->write($record->{$plugin->name});
+            $plugin->write($data);
+            $alarms->{$plugin} = 1
+                if !$alarms->{$plugin} && $plugin->alarm($data);
         }
     }
 
