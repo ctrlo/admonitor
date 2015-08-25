@@ -1,0 +1,13 @@
+# Copy into /etc/systemd/system/admonitor.service
+# Enable with systemctl enable admonitor.service
+[Unit]
+Description=Admonitor Agent
+
+[Service]
+ExecStart=/usr/local/bin/admonitor-agent.pl
+Restart=on-abort
+User=admonitor
+Group=ssl-cert
+
+[Install]
+WantedBy=multi-user.target
