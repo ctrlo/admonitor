@@ -25,6 +25,7 @@ use DateTime::Format::Strptime;
 use DateTime::Format::DBI;
 use JSON;
 use Log::Report;
+use Mail::Message;
 
 our $VERSION = '0.1';
 
