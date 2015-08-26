@@ -30,7 +30,7 @@ has stattypes => (
     default => sub {
         [
             {
-                name => 'memusedper',
+                name => 'realfreeper',
                 type => 'decimal',
                 read => 'avg',
             },
@@ -43,22 +43,22 @@ sub read
     my $lxs = Sys::Statistics::Linux->new(memstats => 1);
     my $stat = $lxs->get;
     {
-        memusedper => $stat->memstats->{memusedper},
+        realfreeper => $stat->memstats->{realfreeper},
     };
 }
 
 sub write
 {   my ($self, $data) = @_;
     $self->write_single(
-        stattype => 'memusedper',
-        value    => $data->{memusedper},
+        stattype => 'realfreeper',
+        value    => $data->{realfreeper},
     );
 }
 
 sub alarm
 {   my ($self, $data) = @_;
-    $self->send_alarm("Memory usage above 85% ($data->{memusedper}%)")
-        if $data->{memusedper} && $data->{memusedper} > 85;
+    $self->send_alarm("Real free memory below 20% ($data->{realfreeper}%)")
+        if $data->{realfreeper} && $data->{realfreeper} < 20;
 }
 
 1;
