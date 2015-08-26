@@ -55,7 +55,7 @@ sub write
 sub alarm
 {   my ($self, $data) = @_;
     $self->send_alarm("Memory usage above 85% ($data->{memusedper}%)")
-        if $data->{memusedper} > 85;
+        if $data->{memusedper} && $data->{memusedper} > 85;
 }
 
 1;

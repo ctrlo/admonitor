@@ -5,6 +5,7 @@ use warnings;
 
 use Admonitor::Hosts;
 use DateTime::Format::Strptime;
+use Log::Report;
 use Mail::Message;
 use Moo;
 
@@ -25,6 +26,12 @@ has host_id => (
 sub write_single
 {   my ($self, $stattype, $param, $value) = @_;
 
+    if (!defined $value)
+    {
+        warning __x"Not writing undefined value for '{stattype}' in plugin '{plugin}'",
+            stattype => $stattype, plugin => $self->name;
+        return;
+    }
     $self->schema->resultset('Statval')->create({
         datetime => $self->datetime,
         host     => $self->host_id,
