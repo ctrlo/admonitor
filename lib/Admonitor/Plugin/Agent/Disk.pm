@@ -33,7 +33,7 @@ has stattypes => (
             {
                 name => 'usageper',
                 type => 'decimal',
-                read => 'avg',
+                read => 'max',
             },
         ],
     },
