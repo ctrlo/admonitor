@@ -30,7 +30,7 @@ has stattypes => (
     default => sub {
         [
             {
-                name => 'realfreeper',
+                name => 'realusedper',
                 type => 'decimal',
                 read => 'avg',
             },
@@ -50,15 +50,20 @@ sub read
 sub write
 {   my ($self, $data) = @_;
     $self->write_single(
-        stattype => 'realfreeper',
-        value    => $data->{realfreeper},
+        stattype => 'realusedper',
+        value    => realusedper($data->{realfreeper}),
     );
 }
 
 sub alarm
 {   my ($self, $data) = @_;
-    $self->send_alarm("Real free memory below 20% ($data->{realfreeper}%)")
-        if $data->{realfreeper} && $data->{realfreeper} < 20;
+    my $realusedper = realusedper($data->{realfreeper});
+    $self->send_alarm("Real used memory greater than 80% ($realusedper%)")
+        if $realusedper && $realusedper > 80;
+}
+
+sub realusedper
+{   defined $_[0] ? 100 - $_[0] : undef;
 }
 
 1;
