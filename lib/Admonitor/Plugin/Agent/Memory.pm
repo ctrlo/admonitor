@@ -49,7 +49,10 @@ sub read
 
 sub write
 {   my ($self, $data) = @_;
-    $self->write_single('memusedper', undef, $data->{memusedper});
+    $self->write_single(
+        stattype => 'memusedper',
+        value    => $data->{memusedper},
+    );
 }
 
 sub alarm

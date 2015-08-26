@@ -55,8 +55,11 @@ sub write
     foreach my $disk (keys %{$data->{diskusage}})
     {
         my $value = $data->{diskusage}->{$disk};
-        $self->write_single('usageper', $disk, $value->{usageper})
-            if $value->{usageper} > 0;
+        $self->write_single(
+            stattype => 'usageper',
+            param    => $disk,
+            value    => $value->{usageper},
+        ) if $value->{usageper} > 0;
     }
 }
 

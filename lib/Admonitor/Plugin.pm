@@ -24,11 +24,18 @@ has host_id => (
 );
 
 sub write_single
-{   my ($self, $stattype, $param, $value) = @_;
+{   my ($self, %options) = @_;
 
-    if (!defined $value)
+    my $stattype = $options{stattype}
+        or panic __x"stattype parameter missing for write_single in {plugin}",
+            plugin => $self->name;
+    my $param = $options{param};
+    my $value = $options{value};
+
+    if (!defined $value && !$options{allow_null})
     {
-        warning __x"Not writing undefined value for '{stattype}' in plugin '{plugin}'",
+        warning __x"Not writing undefined value for '{stattype}' in plugin '{plugin}'. ".
+            "Use allow_null option to override.",
             stattype => $stattype, plugin => $self->name;
         return;
     }

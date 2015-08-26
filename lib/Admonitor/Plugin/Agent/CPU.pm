@@ -51,7 +51,10 @@ sub read
 
 sub write
 {   my ($self, $data) = @_;
-    $self->write_single('avg_15', undef, $data->{loadavg}->{avg_15});
+    $self->write_single(
+        stattype => 'avg_15',
+        value    => $data->{loadavg}->{avg_15},
+    );
 }
 
 1;
