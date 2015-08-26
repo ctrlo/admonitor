@@ -24,6 +24,7 @@ use Dancer2::Plugin::DBIC;
 use DateTime::Format::Strptime;
 use DateTime::Format::DBI;
 use JSON;
+use Log::Report;
 
 our $VERSION = '0.1';
 
