@@ -64,7 +64,7 @@ threads->create(sub {
                 );
             }
         }
-        sleep ($config->{read_interval} || 900);
+        sleep ($config->{read_interval} || 300);
     }
 });
 
