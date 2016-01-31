@@ -21,10 +21,11 @@ package Admonitor;
 use Admonitor::Plugin::Agents;
 use Dancer2;
 use Dancer2::Plugin::DBIC;
+use Log::Report ();
+use Dancer2::Plugin::LogReport;
 use DateTime::Format::Strptime;
 use DateTime::Format::DBI;
-use JSON;
-use Log::Report;
+use JSON qw/encode_json/;
 use Mail::Message;
 
 our $VERSION = '0.1';
