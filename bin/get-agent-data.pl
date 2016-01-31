@@ -28,7 +28,7 @@ use Log::Report mode => 'DEBUG';
 use Dancer2;
 use Dancer2::Plugin::DBIC;
 use IO::Socket::SSL;
-use JSON;
+use JSON qw/decode_json/;
 
 my @hosts = rset('Host')->all;
 
