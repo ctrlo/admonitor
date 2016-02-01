@@ -9,7 +9,6 @@ use File::Temp qw/ tempfile /;
 use IO::Socket::SSL;
 use JSON;
 use Log::Report;
-use Mail::Message;
 use Sys::Hostname;
 use threads;
 
