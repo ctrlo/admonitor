@@ -33,7 +33,7 @@ my $dbh = DBI->connect($db->{dsn},"","", $db->{options});
 setup_db($dbh);
 
 my @agent_names = @{$config->{agents} || []}
-    or die "No agents configured";
+    or error "No agents configured";
 
 threads->create(sub {
     # Use separate DB connection for this thread
@@ -41,7 +41,7 @@ threads->create(sub {
 
     my @agents = map {
         my $name = "Admonitor::Plugin::Agent::$_";
-        eval "require $name" or die $!;
+        eval "require $name" or failure "Cannot use $name";
         $name->new;
     } @agent_names;
     while (1)
@@ -68,7 +68,7 @@ threads->create(sub {
 });
 
 my $ssl_config = $config->{ssl}
-    or die "SSL not configured";
+    or error "SSL not configured";
 
 my $server = IO::Socket::SSL->new(
     LocalPort     => $config->{port} || 9099,
@@ -76,10 +76,10 @@ my $server = IO::Socket::SSL->new(
     SSL_ca_file   => $ssl_config->{ca_file},
     SSL_cert_file => $ssl_config->{cert_file},
     SSL_key_file  => $ssl_config->{key_file},
-) or die "failed to listen: $! $SSL_ERROR";
+) or failure "Failed to listen: $SSL_ERROR";
 
 my $password = $config->{password};
-defined $password or die "No password configured"; # Allow blank password
+defined $password or error "No password configured"; # Allow blank password
 
 while (1) {
     my $client;
