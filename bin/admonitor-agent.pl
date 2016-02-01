@@ -46,23 +46,30 @@ threads->create(sub {
     } @agent_names;
     while (1)
     {
-        my $sth  = $dbh->prepare("INSERT INTO records (retrieved) VALUES (0)");
-        $sth->execute;
-        my $record_id = $dbh->func('last_insert_rowid');
-        $sth  = $dbh->prepare(qq/INSERT INTO "values" (record_id, plugin, key, value) VALUES (?,?,?,?)/);
-        foreach my $agent (@agents)
-        {
-            my $values = $agent->read;
-            foreach my $key (keys %$values)
+        # Catch any DB exceptions. For example, if a long read is currently taking
+        # place, this will die. In this case, at least we will pick up and take
+        # another reading at the next interval, but we do then miss a set of readings.
+        # XXX Store the failed readings then try again?
+        try {
+            my $sth  = $dbh->prepare("INSERT INTO records (retrieved) VALUES (0)");
+            $sth->execute;
+            my $record_id = $dbh->func('last_insert_rowid');
+            $sth  = $dbh->prepare(qq/INSERT INTO "values" (record_id, plugin, key, value) VALUES (?,?,?,?)/);
+            foreach my $agent (@agents)
             {
-                $sth->execute(
-                    $record_id,
-                    "$agent",
-                    $key,
-                    encode_json { value => $values->{$key} }
-                );
+                my $values = $agent->read;
+                foreach my $key (keys %$values)
+                {
+                    $sth->execute(
+                        $record_id,
+                        "$agent",
+                        $key,
+                        encode_json { value => $values->{$key} }
+                    );
+                }
             }
-        }
+        } hide => 'ALL'; # All messages get reported in next statement
+        $@->reportAll(is_fatal => 0);
         sleep ($config->{read_interval} || 300);
     }
 });
