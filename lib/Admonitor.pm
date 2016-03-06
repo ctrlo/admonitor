@@ -23,6 +23,7 @@ use Dancer2;
 use Dancer2::Plugin::DBIC;
 use Log::Report ();
 use Dancer2::Plugin::LogReport;
+use Dancer2::Plugin::Auth::Extensible;
 use DateTime::Format::Strptime;
 use DateTime::Format::DBI;
 use JSON qw/encode_json/;
@@ -30,7 +31,7 @@ use Mail::Message;
 
 our $VERSION = '0.1';
 
-any '/' => sub {
+any '/' => require_login sub {
 
     if (param 'submit')
     {
@@ -49,7 +50,7 @@ any '/' => sub {
     };
 };
 
-get '/data/?:plugin' => sub {
+get '/data/?:plugin' => require_login sub {
 
     my $pname = param 'plugin';
     my $plugin = "Admonitor::Plugin::$pname";
