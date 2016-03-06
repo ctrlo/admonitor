@@ -31,6 +31,11 @@ use Mail::Message;
 
 our $VERSION = '0.1';
 
+hook before_template => sub {
+    my $tokens = shift;
+    $tokens->{user} = logged_in_user;
+};
+
 any '/' => require_login sub {
 
     if (param 'submit')
@@ -46,6 +51,10 @@ any '/' => require_login sub {
 
     my @pnames = map { $_->name } @$plugins;
     template 'index' => {
+        range => {
+            start => session('start'),
+            end   => session('end'),
+        },
         plugins => [@pnames],
     };
 };

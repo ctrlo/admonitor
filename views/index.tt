@@ -1,9 +1,14 @@
-<div>
-    <form method="post">
-        <p>Start: <input type="text" name="start" class="datepicker"></p>
-        <p>End: <input type="text" name="end" class="datepicker"></p>
-        <input type="submit" name="submit" value="update">
-    </form>
+<div class="row">
+    <div class="col-md-6">
+        <form method="post" class="form-inline">
+            <div class="input-group input-daterange">
+                <input type="text" name="start" class="form-control datepicker from" value="[% range.start %]">
+                <span class="input-group-addon">to</span>
+                <input type="text" name="end" class="form-control datepicker to" value="[% range.end %]">
+            </div>
+            <input type="submit" name="submit" value="update" class="btn btn-primary">
+        </form>
+    </div>
 </div>
 
 [% FOREACH plug IN plugins %]
@@ -15,8 +20,9 @@
 <script type="text/javascript">
 
     $(document).ready(function(){
-        $(function() {
-            $( ".datepicker" ).datepicker({ dateFormat: "yy-mm-dd" });
+        $('.datepicker').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true
         });
 
         var mychart;
