@@ -30,13 +30,18 @@ __PACKAGE__->add_columns(
     size      => 50,
   },
   decimal => {
-    data_type => 'decimal',
-    size      => [ 10, 2 ],
+    data_type   => 'decimal',
+    size        => [ 10, 3 ],
+    is_nullable => 1,
   },
   param => {
     data_type   => 'varchar',
     size        => 50,
     is_nullable => 1,
+  },
+  failcount => {
+    data_type     => 'integer',
+    is_nullable   => 1,
   },
 );
  

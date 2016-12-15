@@ -31,4 +31,8 @@ __PACKAGE__->has_many(
   'statvals' => 'Admonitor::Schema::Result::Statval',
   {'foreign.host'=>'self.id'});
 
+__PACKAGE__->has_many(
+  'host_checkers' => 'Admonitor::Schema::Result::HostChecker',
+  {'foreign.host'=>'self.id'});
+
 1;

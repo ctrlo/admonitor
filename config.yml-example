@@ -40,6 +40,12 @@ admonitor:
         enabled: 1
       Disk:
         enabled: 1
+    checkers:
+      Ping:
+        enabled: 1
+        all_hosts: 1
+      WWW:
+        enabled: 1
 
 plugins:
   DBIC:
