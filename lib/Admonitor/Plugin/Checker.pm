@@ -53,12 +53,10 @@ has hosts => (
 
 sub _build_hosts
 {   my $self = shift;
-    $self->schema->storage->debug(1);
     my $search = $self->config->{all_hosts} ? {} : { 'host_checkers.name' => $self->name };
     my @hosts = $self->schema->resultset('Host')->search($search,{
         join => 'host_checkers'
     })->all;
-    $self->schema->storage->debug(0);
     [@hosts];
 }
 
