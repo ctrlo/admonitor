@@ -62,6 +62,10 @@ sub do_host
 
     my $serverdata = decode_json <$client>;
 
+    # Bork if no data received - likely there is a problem
+    error __x"No data received from {host}", host => $host->name
+        if !@{$serverdata->{records}};
+
     my @plugins = map {
         my $name = "Admonitor::Plugin::Agent::$_";
         eval "require $name";
