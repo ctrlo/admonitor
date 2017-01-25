@@ -12,6 +12,8 @@ use Log::Report;
 use Sys::Hostname;
 use threads;
 
+dispatcher SYSLOG => 'syslog', facility => 'local0';
+
 my $configf = Config::Any->load_files(
     {
         files   => ['/etc/admonitor/agent.yaml'],
