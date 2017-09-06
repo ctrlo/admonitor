@@ -1,4 +1,5 @@
 apt-get install -y libsys-statistics-linux-perl libdbd-sqlite3-perl libmoo-perl libdatetime-format-strptime-perl libmoox-types-mooselike-perl
+mkdir -p /usr/local/share/perl/5.20.2/
 cp -a lib/Admonitor /usr/local/share/perl/5.20.2/
 cp bin/admonitor-agent.pl /usr/local/bin/
 cp etc/admonitor.service /etc/systemd/system/
@@ -7,4 +8,6 @@ groupadd --system admonitor
 useradd --system -g admonitor admonitor
 mkdir /etc/admonitor
 cp etc/agent.yaml /etc/admonitor/
+# Edit agent.yaml
 ufw allow from 5.28.62.146 to any port 9099 proto tcp
+systemctl start admonitor
