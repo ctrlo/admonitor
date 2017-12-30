@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use IO::Async::Loop;
+use Log::Report 'admonitor';
 use Moo;
 
 has schema => (
@@ -32,6 +33,7 @@ sub _build_all
     my @plugins = map {
         my $name = "Admonitor::Plugin::Checker::$_";
         eval "require $name";
+        panic $@ if $@; # Report somewhere useful if checker can't be loaded
         $name->new(
             loop   => $self->loop,
             schema => $self->schema,
