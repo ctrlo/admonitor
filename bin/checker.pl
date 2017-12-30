@@ -31,6 +31,11 @@ use IO::Async::Timer::Periodic;
 use Admonitor::Config;
 use Admonitor::Plugin::Checkers;
 
+dispatcher SYSLOG => 'syslog',
+    flags    => 'pid',
+    identity => 'Admonitor',
+    facility => 'local0';
+
 # Initiate singleton config class for use in other modules
 Admonitor::Config->instance(
     config => config,
