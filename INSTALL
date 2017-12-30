@@ -1,4 +1,4 @@
-apt-get install -y libsys-statistics-linux-perl libdbd-sqlite3-perl libmoo-perl libdatetime-format-strptime-perl libmoox-types-mooselike-perl
+apt-get install -y libsys-statistics-linux-perl libdbd-sqlite3-perl libmoo-perl libdatetime-format-strptime-perl libmoox-types-mooselike-perl libconfig-any-perl libjson-perl liblog-report-perl libyaml-perl libmail-box-perl
 mkdir -p /usr/local/share/perl/5.24.1/
 cp -a lib/Admonitor /usr/local/share/perl/5.24.1/
 cp bin/admonitor-agent.pl /usr/local/bin/
