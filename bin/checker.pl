@@ -58,4 +58,11 @@ my $timer = IO::Async::Timer::Periodic->new(
 );
 $timer->start;
 $loop->add( $timer );
-$loop->run;
+
+# Catch any exceptions and then restart loop so that the overall process doesn't die
+while (1)
+{
+    try { $loop->run };
+    $@->reportAll(is_fatal => 0);
+    sleep 60; # Throttle continuous exceptions
+}
