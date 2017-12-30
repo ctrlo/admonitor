@@ -5,7 +5,7 @@ use warnings;
 
 use Admonitor::Hosts;
 use DateTime::Format::Strptime;
-use Log::Report;
+use Log::Report 'admonitor';
 use Mail::Message;
 use Moo;
 

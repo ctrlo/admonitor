@@ -21,7 +21,7 @@ package Admonitor;
 use Admonitor::Plugin::Agents;
 use Dancer2;
 use Dancer2::Plugin::DBIC;
-use Log::Report ();
+use Dancer2::Plugin::LogReport 'admonitor';
 use Dancer2::Plugin::LogReport;
 use Dancer2::Plugin::Auth::Extensible;
 use DateTime::Format::Strptime;

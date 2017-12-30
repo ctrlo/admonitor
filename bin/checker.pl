@@ -24,7 +24,7 @@ use warnings;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 
-use Log::Report mode => 'DEBUG';
+use Log::Report 'admonitor';
 use Dancer2;
 use Dancer2::Plugin::DBIC;
 use IO::Async::Timer::Periodic;
