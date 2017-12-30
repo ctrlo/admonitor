@@ -64,6 +64,7 @@ get '/data/?:plugin' => require_login sub {
     my $pname = param 'plugin';
     my $plugin = "Admonitor::Plugin::$pname";
     eval "require $plugin";
+    panic $@ if $@; # Report somewhere useful if checker can't be loaded
     my $p = $plugin->new(
         schema => schema,
         start  => session('start'),

@@ -43,7 +43,8 @@ threads->create(sub {
 
     my @agents = map {
         my $name = "Admonitor::Plugin::Agent::$_";
-        eval "require $name" or failure "Cannot use $name";
+        eval "require $name";
+        panic $@ if $@; # Report somewhere useful if checker can't be loaded
         $name->new;
     } @agent_names;
     while (1)

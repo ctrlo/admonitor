@@ -25,6 +25,7 @@ sub _build_all
     my @plugins = map {
         my $name = "Admonitor::Plugin::Agent::$_";
         eval "require $name";
+        panic $@ if $@; # Report somewhere useful if checker can't be loaded
         $name->new(
             schema => $self->schema,
         );
