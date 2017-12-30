@@ -1,6 +1,6 @@
 apt-get install -y libsys-statistics-linux-perl libdbd-sqlite3-perl libmoo-perl libdatetime-format-strptime-perl libmoox-types-mooselike-perl
-mkdir -p /usr/local/share/perl/5.20.2/
-cp -a lib/Admonitor /usr/local/share/perl/5.20.2/
+mkdir -p /usr/local/share/perl/5.24.1/
+cp -a lib/Admonitor /usr/local/share/perl/5.24.1/
 cp bin/admonitor-agent.pl /usr/local/bin/
 cp etc/admonitor.service /etc/systemd/system/
 systemctl enable admonitor.service
