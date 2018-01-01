@@ -10,6 +10,7 @@ systemctl enable admonitor.service
 groupadd --system admonitor
 useradd --system -g admonitor admonitor
 mkdir /etc/admonitor
+chmod 755 /etc/admonitor/
 cp etc/agent.yaml /etc/admonitor/
 chmod 640 /etc/admonitor/agent.yaml
 chown admonitor /etc/admonitor/agent.yaml
