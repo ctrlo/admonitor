@@ -80,7 +80,7 @@ sub _build_timers
     foreach my $host (@{$self->hosts})
     {
         $timers->{$host->id} = IO::Async::Timer::Periodic->new(
-            interval => 1,
+            interval => 60,
             on_tick  => sub {
                 my $t0 = [Time::HiRes::gettimeofday];
                 my $host_name = $host->name;
