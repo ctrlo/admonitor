@@ -7,7 +7,7 @@ use Config::Any;
 use DBI;
 use File::Temp qw/ tempfile /;
 use IO::Socket::SSL;
-use JSON;
+use Cpanel::JSON::XS;
 use Log::Report 'admonitor';
 use Sys::Hostname;
 use threads;
