@@ -32,6 +32,7 @@ use Admonitor::Config;
 use Admonitor::Plugin::Checkers;
 
 dispatcher SYSLOG => 'syslog',
+    mode     => 'DEBUG',
     flags    => 'pid',
     identity => 'Admonitor',
     facility => 'local0';
