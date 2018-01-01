@@ -29,8 +29,9 @@ engines:
       cookie_duration: 7200
 
 admonitor:
-#  ssl:
-#    ca_file: /etc/ssl/certs/mycert.pem
+  ssl:
+    # Only required if override required for self-signed certs
+    fingerprint: sha256$XX:XX:...
   default_port: 9099
   plugins:
     agents:

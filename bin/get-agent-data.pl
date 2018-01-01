@@ -50,6 +50,30 @@ sub do_host
 {   my $host = shift;
 
     my $alarms; # Stop multiple alarms
+
+    # Allow SSL fingerprint to override only connections where verification
+    # unsuccessful
+    if (config->{admonitor}->{ssl}->{fingerprint})
+    {
+        IO::Socket::SSL::set_args_filter_hack( sub {
+            my ($is_server,$args) = @_;
+            if ( ! $is_server ) {
+                # client settings - enable verification with default CA
+                # and fallback hostname verification etc
+                delete @{$args}{qw(
+                    SSL_verify_mode
+                    SSL_ca_file
+                    SSL_ca_path
+                    SSL_verifycn_scheme
+                    SSL_version
+                )};
+                # and add some fingerprints for known certs which are signed by
+                # unknown CAs or are self-signed
+                $args->{SSL_fingerprint} = config->{admonitor}->{ssl}->{fingerprint};
+            }
+        });
+    }
+
     my $client = IO::Socket::SSL->new(
         SSL_ca_file  => config->{admonitor}->{ssl}->{ca_file},
         PeerHost     => $host->name,
