@@ -27,6 +27,7 @@ use MooX::Types::MooseLike::Base qw/HashRef/;
 extends 'Admonitor::Plugin::Checker';
 
 use IO::Async::Timer::Periodic;
+use Log::Report 'admonitor';
 use Net::Async::HTTP;
 use Math::NumberCruncher;
 
@@ -82,13 +83,16 @@ sub _build_timers
             interval => 1,
             on_tick  => sub {
                 my $t0 = [Time::HiRes::gettimeofday];
+                my $host_name = $host->name;
                 $timers->{$host->id}->adopt_future(
-                    $self->io_object->GET('https://' . $host->name)
+                    $self->io_object->GET('https://' . $host_name)
                         ->on_done(sub {
                             push @{$self->results->{$host->id}},
                                 Time::HiRes::tv_interval($t0);
                         })
                         ->on_fail(sub {
+                            my $failure = shift;
+                            assert "Failed to make WWW request to $host_name: $failure";
                             $self->failcount->{$host->id}++;
                         })
                         ->else_done
