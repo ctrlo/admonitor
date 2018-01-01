@@ -14,9 +14,14 @@ use threads;
 
 dispatcher SYSLOG => 'syslog', facility => 'local0';
 
+my $cf = '/etc/admonitor/agent.yaml';
+
+-f $cf
+    or failure "Unable to read configuration file: $cf";
+
 my $configf = Config::Any->load_files(
     {
-        files   => ['/etc/admonitor/agent.yaml'],
+        files   => [$cf],
         use_ext => 1,
     }
 )->[0];
