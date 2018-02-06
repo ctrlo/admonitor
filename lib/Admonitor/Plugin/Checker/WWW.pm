@@ -119,8 +119,8 @@ sub write
         );
         my $sent = @{$self->results->{$host->id}} + $failcount;
         my $failavg = int (($failcount / $sent) * 100);
-        $self->send_alarm("WWW failure higher than 5% ($failavg%)")
-            if $failavg > 5;
+        $self->send_alarm("WWW failure higher than 25% ($failavg%)")
+            if $failavg > 25;
         $self->failcount->{$host->id} = 0;
         $self->results->{$host->id} = [];
     }
