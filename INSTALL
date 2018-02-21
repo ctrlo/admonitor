@@ -16,4 +16,5 @@ chmod 640 /etc/admonitor/agent.yaml
 chown admonitor /etc/admonitor/agent.yaml
 # Edit agent.yaml
 ufw allow from 5.28.62.146 to any port 9099 proto tcp
+ufw allow from 2001:41c9:1:41c::146 to any port 9099 proto tcp
 systemctl start admonitor
