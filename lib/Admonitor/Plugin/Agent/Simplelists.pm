@@ -75,8 +75,9 @@ sub alarm
     foreach my $queue (@queues)
     {
         my $threshold = $threshold{$queue} || 10;
-        $self->send_alarm("More than 5 files in queue $queue")
-            if $data->{queue_count}->{$queue} > $threshold;
+        my $total     = $data->{queue_count}->{$queue};
+        $self->send_alarm("More than $threshold files in queue $queue (total $total)")
+            if $total > $threshold;
     }
 }
 
