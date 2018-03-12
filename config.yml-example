@@ -41,6 +41,8 @@ admonitor:
         enabled: 1
       Disk:
         enabled: 1
+      OpenDKIM:
+        enabled: 1
     checkers:
       Ping:
         enabled: 1
