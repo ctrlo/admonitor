@@ -42,33 +42,39 @@ Admonitor::Config->instance(
     config => config,
 );
 
-my $checkers = Admonitor::Plugin::Checkers->new(
-    schema => schema,
-);
-
-my $loop = $checkers->loop;
-
-foreach my $checker (@{$checkers->all})
-{
-    $checker->start;
-}
-
-my $timer = IO::Async::Timer::Periodic->new(
-    interval => 300,
-    on_tick  => sub {
-        foreach my $checker (@{$checkers->all})
-        {
-            $checker->write;
-        }
-   },
-);
-$timer->start;
-$loop->add( $timer );
-
 # Catch any exceptions and then restart loop so that the overall process doesn't die
 while (1)
 {
-    try { $loop->run };
+    # Don't collect non-fatal messages in the try block, as we could be running
+    # for a long time and there might be a large number.
+    try { _run() } accept => 'ERROR,FAULT,FAILURE,PANIC', on_die => 'PANIC';
     $@->reportAll(is_fatal => 0);
     sleep 60; # Throttle continuous exceptions
+}
+
+sub _run
+{
+    my $checkers = Admonitor::Plugin::Checkers->new(
+        schema => schema,
+    );
+
+    my $loop = $checkers->loop;
+
+    foreach my $checker (@{$checkers->all})
+    {
+        $checker->start;
+    }
+
+    my $timer = IO::Async::Timer::Periodic->new(
+        interval => 300,
+        on_tick  => sub {
+            foreach my $checker (@{$checkers->all})
+            {
+                $checker->write;
+            }
+       },
+    );
+    $timer->start;
+    $loop->add( $timer );
+    $loop->run;
 }
