@@ -48,14 +48,16 @@ sub read
     {
         $values->{$queue} = files_in_dir("/var/lib/simplelists/$queue");
     }
-    return $values;
+    return +{
+        queue_count => $values,
+    };
 }
 
 sub write
 {   my ($self, $data) = @_;
     foreach my $queue (@queues)
     {
-        my $value = $data->{$queue};
+        my $value = $data->{queue_count}->{$queue};
         $self->write_single(
             stattype => 'queue_count',
             param    => $queue,
@@ -70,7 +72,7 @@ sub alarm
     foreach my $queue (@queues)
     {
         $self->send_alarm("More than 5 files in queue $queue")
-            if !$data->{$queue} > 5;
+            if !$data->{queue_count}->{$queue} > 5;
     }
 }
 
