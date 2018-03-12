@@ -68,10 +68,15 @@ sub write
 
 sub alarm
 {   my ($self, $data) = @_;
+    my %threshold = (
+        approve  => 2,
+        incoming => 2,
+    );
     foreach my $queue (@queues)
     {
+        my $threshold = $threshold{$queue} || 10;
         $self->send_alarm("More than 5 files in queue $queue")
-            if !$data->{queue_count}->{$queue} > 5;
+            if !$data->{queue_count}->{$queue} > $threshold;
     }
 }
 
