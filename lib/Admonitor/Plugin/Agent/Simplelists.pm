@@ -76,7 +76,7 @@ sub alarm
     {
         my $threshold = $threshold{$queue} || 10;
         $self->send_alarm("More than 5 files in queue $queue")
-            if !$data->{queue_count}->{$queue} > $threshold;
+            if $data->{queue_count}->{$queue} > $threshold;
     }
 }
 
