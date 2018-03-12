@@ -68,7 +68,6 @@ sub write
 
 sub alarm
 {   my ($self, $data) = @_;
-    my $exists = $data->{socket_exists};
     foreach my $queue (@queues)
     {
         $self->send_alarm("More than 5 files in queue $queue")
