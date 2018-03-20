@@ -28,6 +28,7 @@ use Log::Report 'admonitor';
 use Dancer2;
 use Dancer2::Plugin::DBIC;
 use IO::Async::Timer::Periodic;
+use Net::SSLeay 1.83; # Fixes memory leak
 use Admonitor::Config;
 use Admonitor::Plugin::Checkers;
 
