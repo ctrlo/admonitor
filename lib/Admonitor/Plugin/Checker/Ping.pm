@@ -108,10 +108,12 @@ sub write
             failcount  => $failcount,
             allow_null => 1,
         );
-        my $sent = @{$self->results->{$host->id}} + $failcount;
-        my $failavg = int (($failcount / $sent) * 100);
-        $self->send_alarm("Ping failure higher than 5% ($failavg%)")
-            if $failavg > 5;
+        if (my $sent = @{$self->results->{$host->id}} + $failcount)
+        {
+            my $failavg = int (($failcount / $sent) * 100);
+            $self->send_alarm("Ping failure higher than 5% ($failavg%)")
+                if $failavg > 5;
+        }
         $self->failcount->{$host->id} = 0;
         $self->results->{$host->id} = [];
     }
