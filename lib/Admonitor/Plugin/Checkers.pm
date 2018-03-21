@@ -30,6 +30,7 @@ has all => (
 sub _build_all
 {   my $self = shift;
 
+    my @names = grep { $self->config->{$_}->{enabled} } keys %{$self->config};
     my @plugins = map {
         my $name = "Admonitor::Plugin::Checker::$_";
         eval "require $name";
@@ -38,7 +39,7 @@ sub _build_all
             loop   => $self->loop,
             schema => $self->schema,
         );
-    } keys %{$self->config};
+    } @names;
     \@plugins;
 }
 
