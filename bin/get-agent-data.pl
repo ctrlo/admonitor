@@ -77,7 +77,7 @@ sub do_host
         SSL_ca_file  => config->{admonitor}->{ssl}->{ca_file},
         PeerHost     => $host->name,
         PeerPort     => $host->port || config->{admonitor}->{default_port} || 9099,
-    ) or failure "$! SSL error=$SSL_ERROR";
+    ) or failure __x"Unable to connect to {host}: $SSL_ERROR", host => $host->name;
 
     print $client $host->password."\n";
     <$client> eq "OK\n"
