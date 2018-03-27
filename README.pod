@@ -1,0 +1,179 @@
+=pod
+
+=head1 Introduction
+
+Admonitor was created out of my need for a simple and lightweight monitoring
+system that could be easily extended.
+
+It's not webscale, but is aimed at those situations where you have a few dozen
+servers that you need to monitor and don't want to install something like
+Icinga or Nagios.
+
+It's written in Perl, so if this is a language that you are familiar with, then
+it is very easy to write additional monitoring plugins.
+
+=head1 Architecture
+
+The design is very modular. It consists of one central server, with agents
+running on individual servers.
+
+=head2 Hosts being monitored
+
+Each host being monitored has a small daemon installed to monitor the required
+resources (e.g. memory, CPU). The daemon logs the required characteristics to a
+local SQLite database. This means that if there are any communication problems,
+then the logging will still take place. Periodically, the central server will
+contact each host and download its statistics.
+
+=head2 Central server
+
+The central server performs a number of functions:
+
+=over 4
+
+=item Retrieving statistics from host
+
+Periodically the central server will contact each host to retrieve the
+statistics that are being monitored internally by the agent (e.g. memory, CPU).
+
+=item Performs external monitoring
+
+It performs monitoring of those services that can be checked externally. E.g.
+pings, HTTP requests.
+
+=item Alerts
+
+If pre-defined criteria are met, then the central server sends alerts. At the
+moment, only email alerts are possible.
+
+=item Analytics
+
+The central server contains a web service, which can be used to view graphs of
+metrics over time. This is useful (for example) to see exactly when a spike in
+memory use occurred, which can help in tracking down the cause.
+
+=back
+
+=head2 Modules
+
+Modules come in 2 flavours:
+
+=over 4
+
+=item Agents (Plugin::Agent::)
+
+These sit on the hosts being monitored and record data locally, which is then
+transferred to the central server. The modules themselves contain some code
+that is run on the agent, and some that is run on the server. For example, the
+C<read> method is run on the host being monitored; the C<write> and C<alarm>
+methods are run on the server.
+
+=item Checkers (Plugin::Checker::)
+
+These monitor something external, and only run on the controller.
+
+=back
+
+=head1 Installation
+
+=head2 Hosts being monitored
+
+Quick and dirty installation instructions for Debian.
+
+  # Install required modules
+  apt-get install -y libsys-statistics-linux-perl libdbd-sqlite3-perl libmoo-perl \
+    libdatetime-format-strptime-perl libmoox-types-mooselike-perl libconfig-any-perl \
+    libjson-perl liblog-report-perl libyaml-perl libmail-box-perl libcpanel-json-xs-perl
+
+  # Install Admonitor modules
+  cp -a lib/Admonitor /usr/local/share/perl/a.b.c/
+
+  # Install agent script
+  cp bin/admonitor-agent.pl /usr/local/bin/
+
+  # Install service
+  cp etc/admonitor.service /etc/systemd/system/
+  systemctl enable admonitor.service
+
+  # Add required users
+  groupadd --system admonitor
+  useradd --system -g admonitor admonitor
+
+  # Install config
+  mkdir /etc/admonitor
+  cp etc/agent.yaml /etc/admonitor/
+  chmod 640 /etc/admonitor/agent.yaml
+  chown admonitor /etc/admonitor/agent.yaml
+
+  # Update agent.yaml as required
+
+  # Start the daemon
+  systemctl start admonitor
+
+=head2 Controller
+
+The controller is a Dancer2 application, although the plan is to remove the
+dependency on Dancer2 in the future.
+
+Install the whole repo to a web server location (e.g. /srv) and then:
+
+=head3 Install the database
+
+=over 4
+
+=item Create a blank database in MySQL or PostgreSQL
+
+=item Install the schema using DBIx::Class::Migration
+
+  DBIC_MIGRATION_USERNAME=xxx DBIC_MIGRATION_PASSWORD=xxx dbic-migration -Ilib \
+    --schema_class='Admonitor::Schema' --dsn='dbi:mysql:database=admonitor' \
+    --dbic_connect_attrs quote_names=1 install
+
+=back
+
+=head3 Configure the application
+
+Copy config.yml-example to config.yml and update as required. Choose the
+Admonitor plugins that you wish to enable, and add the database configuration
+to the DBIC plugin section.
+
+=head3 Populate the database
+
+Manually connect to the database and then:
+
+=over 4
+
+=item Add a row to the user table, adding just firstname, surname, email, username
+
+=item Add a row to the host table for each host to be monitored
+
+Only name and password should be added. The password for each host should match
+the corresponding password in the
+configuration file on the host.
+
+=item Add rows to the host_checker table
+
+If a checker is not set to C<all_hosts> in the config file, then a row has to
+be added to stipulate which hosts should be monitored with which checkers. This
+is only for external checkers, not the agents that run on each host.
+
+=back
+
+=head3 Add a cron job to collect the agent data
+
+The intention is for this to become a constantly-running service in the future,
+but at the moment it is a cron job that runs periodically.
+
+Create an admonitor user, and add a cron job for the get-agent-data script. For
+example, to collect the data every 15 minutes:
+
+  5,20,35,55 * * * * /srv/admonitor/bin/get-agent-data.pl
+
+This will contact each host, collect the statistics, and save to the database
+on the controller.
+
+=head1 Conclusion
+
+There are aspects of the application's design that I would like to change. If
+you start using Admonitor, please let me know, so that I can keep you informed
+of any changes.
