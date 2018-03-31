@@ -54,30 +54,18 @@ threads->create(sub {
     } @agent_names;
     while (1)
     {
-        # Catch any DB exceptions. For example, if a long read is currently taking
-        # place, this will die. In this case, at least we will pick up and take
-        # another reading at the next interval, but we do then miss a set of readings.
-        # XXX Store the failed readings then try again?
-        try {
-            my $sth  = $dbh->prepare("INSERT INTO records (retrieved) VALUES (0)");
-            $sth->execute;
-            my $record_id = $dbh->func('last_insert_rowid');
-            $sth  = $dbh->prepare(qq/INSERT INTO "values" (record_id, plugin, key, value) VALUES (?,?,?,?)/);
-            foreach my $agent (@agents)
+        my $sth  = $dbh->prepare("INSERT INTO records (retrieved) VALUES (0)");
+        _execute($sth);
+        my $record_id = $dbh->func('last_insert_rowid');
+        $sth  = $dbh->prepare(qq/INSERT INTO "values" (record_id, plugin, key, value) VALUES (?,?,?,?)/);
+        foreach my $agent (@agents)
+        {
+            my $values = $agent->read;
+            foreach my $key (keys %$values)
             {
-                my $values = $agent->read;
-                foreach my $key (keys %$values)
-                {
-                    $sth->execute(
-                        $record_id,
-                        "$agent",
-                        $key,
-                        encode_json { value => $values->{$key} }
-                    );
-                }
+                _execute($sth, $record_id, "$agent", $key, encode_json { value => $values->{$key} });
             }
-        } hide => 'ALL'; # All messages get reported in next statement
-        $@->reportAll(is_fatal => 0);
+        }
         sleep ($config->{read_interval} || 300);
     }
 });
@@ -115,13 +103,13 @@ while (1) {
     }
 
     my $sth = $dbh->prepare("SELECT rowid, datetime FROM records WHERE retrieved = 0 ORDER BY datetime");
-    $sth->execute;
+    _execute($sth);
     my @stats;
     my ($datemin, $datemax);
     while (my $row = $sth->fetchrow_hashref)
     {
         my $sth2 = $dbh->prepare(qq/SELECT plugin, key, value FROM "values" WHERE record_id=?/);
-        $sth2->execute($row->{rowid});
+        _execute($sth2, $row->{rowid});
         while (my $values = $sth2->fetchrow_hashref)
         {
             $datemin = $row->{datetime} if !$datemin;
@@ -139,7 +127,7 @@ while (1) {
         hostname => $config->{hostname} || hostname,
     });
     $sth = $dbh->prepare("UPDATE records SET retrieved = 1 WHERE datetime >= ? AND datetime <= ?");
-    $sth->execute($datemin, $datemax) if $datemin && $datemax;
+    _execute($sth, $datemin, $datemax) if $datemin && $datemax;
     print $client "$serverdata \n";
 }  
   
@@ -164,3 +152,23 @@ sub setup_db
     ));
 }
 
+# Thread safe version, which retries if another execution is making the
+# database busy
+sub _execute
+{   my ($sth, @bind) = @_;
+    my $exec = 1;
+    while ($exec)
+    {
+        try {
+            $sth->execute(@bind);
+        };
+        if ($@)
+        {
+            $@->reportFatal(is_fatal => 0);
+            sleep 3;
+        }
+        else {
+            $exec = 0;
+        }
+    }
+}
