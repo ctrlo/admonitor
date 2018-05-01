@@ -1,0 +1,11 @@
+[Unit]
+Description=Admonitor Checker
+
+[Service]
+ExecStart=/srv/admonitor/bin/checker.pl
+Restart=on-abort
+User=admonitor
+Group=admonitor
+
+[Install]
+WantedBy=multi-user.target
