@@ -87,8 +87,17 @@ sub _build_timers
                 $timers->{$host->id}->adopt_future(
                     $self->io_object->GET('https://' . $host_name)
                         ->on_done(sub {
-                            push @{$self->results->{$host->id}},
-                                Time::HiRes::tv_interval($t0);
+                            my $response = shift;
+                            if ($response->is_success)
+                            {
+                                push @{$self->results->{$host->id}},
+                                    Time::HiRes::tv_interval($t0);
+                            }
+                            else {
+                                assert __x"Failed to make WWW request to {host}: unexpected response: {code}",
+                                    host => $host_name, code => $response->code;
+                                $self->failcount->{$host->id}++;
+                            }
                         })
                         ->on_fail(sub {
                             my $failure = shift;
