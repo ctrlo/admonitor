@@ -28,6 +28,8 @@ use Log::Report 'admonitor';
 use Dancer2;
 use Dancer2::Plugin::DBIC;
 use IO::Socket::SSL;
+use IO::Socket::Timeout;
+use Errno qw(ETIMEDOUT EWOULDBLOCK);
 
 my @hosts = rset('Host')->all;
 
@@ -77,13 +79,27 @@ sub do_host
         SSL_ca_file  => config->{admonitor}->{ssl}->{ca_file},
         PeerHost     => $host->name,
         PeerPort     => $host->port || config->{admonitor}->{default_port} || 9099,
+        Timeout      => 5,
     ) or failure __x"Unable to connect to {host}: $SSL_ERROR", host => $host->name;
 
+    # Set up timeouts on the actual data exchange (otherwise may hang indefinitely)
+    IO::Socket::Timeout->enable_timeouts_on($client);
+    $client->read_timeout(5);
+    $client->write_timeout(5);
+
     print $client $host->password."\n";
-    <$client> eq "OK\n"
+    my $response = <$client>;
+    if (!$response && ( 0+$! == ETIMEDOUT || 0+$! == EWOULDBLOCK )) {
+        error __x"Timeout reading data from {host} during authentication", host => $host->name;
+    }
+    $response eq "OK\n"
         or error "Authentication failed";
 
-    my $serverdata = decode_json <$client>;
+    $response = <$client>;
+    if (!$response && ( 0+$! == ETIMEDOUT || 0+$! == EWOULDBLOCK )) {
+        error __x"Timeout reading data from {host} during data exchange", host => $host->name;
+    }
+    my $serverdata = decode_json $response;
 
     # Bork if no data received - likely there is a problem
     error __x"No data received from {host}", host => $host->name
