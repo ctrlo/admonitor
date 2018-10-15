@@ -82,9 +82,10 @@ sub _build_timers
         $timers->{$host->id} = IO::Async::Timer::Periodic->new(
             interval => 60,
             on_tick  => sub {
+                my $timer = shift;
                 my $t0 = [Time::HiRes::gettimeofday];
                 my $host_name = $host->name;
-                $timers->{$host->id}->adopt_future(
+                $timer->adopt_future(
                     $self->io_object->GET('https://' . $host_name)
                         ->on_done(sub {
                             my $response = shift;
