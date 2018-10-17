@@ -23,6 +23,11 @@ __PACKAGE__->add_columns(
     size        => 64,
     is_nullable => 1,
   },
+  group_id => {
+    data_type      => "integer",
+    is_foreign_key => 1,
+    is_nullable    => 1,
+  },
 );
  
 __PACKAGE__->set_primary_key('id');
@@ -34,5 +39,9 @@ __PACKAGE__->has_many(
 __PACKAGE__->has_many(
   'host_checkers' => 'Admonitor::Schema::Result::HostChecker',
   {'foreign.host'=>'self.id'});
+
+__PACKAGE__->belongs_to(
+  'group' => 'Admonitor::Schema::Result::Group',
+  {'foreign.id'=>'self.group_id'});
 
 1;

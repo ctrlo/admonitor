@@ -162,13 +162,17 @@ sub alarm {}
 
 sub send_alarm
 {   my ($self, $error) = @_;
-    my $hostname = $self->_hosts->host($self->host_id)->name;
+    my $host = $self->_hosts->host($self->host_id);
+    my $hostname = $host->name;
     my $body = "An alarm was received for host $hostname: $error";
-    my $msg = Mail::Message->build(
-        To      => 'root',
-        Subject => "Admonitor alarm",
-        data    => $body,
-    )->send(via => 'sendmail');
+    foreach my $user_group ($host->group->user_groups)
+    {
+        my $msg = Mail::Message->build(
+            To      => $user_group->user->email,
+            Subject => "Admonitor alarm",
+            data    => $body,
+        )->send(via => 'sendmail');
+    }
     1; # Report that an alarm has been sent
 }
 
