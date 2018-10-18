@@ -100,6 +100,7 @@ foreach my $group_id (keys %group_send)
         {
             $msg .= "$login\n";
         }
+        $msg .= "\n";
     }
 
     my $group = rset('Group')->find($group_id);
