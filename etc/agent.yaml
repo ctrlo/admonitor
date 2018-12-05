@@ -2,6 +2,9 @@ agents:
     - CPU
     - Memory
     - Disk
+#    - OpenDKIM
+#    - Spamd
+#    - Simplelists
 #read_interval: 900
 #port: 9099
 password: secret

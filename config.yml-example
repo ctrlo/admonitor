@@ -42,7 +42,7 @@ admonitor:
       Disk:
         enabled: 1
       OpenDKIM:
-        enabled: 1
+        enabled: 0
       Spamd:
         enabled: 0
       Simplelists:
