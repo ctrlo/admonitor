@@ -43,6 +43,8 @@ admonitor:
         enabled: 1
       OpenDKIM:
         enabled: 1
+      Spamd:
+        enabled: 0
       Simplelists:
         enabled: 0
     checkers:
