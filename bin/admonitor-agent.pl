@@ -60,7 +60,9 @@ threads->create(sub {
         $sth  = $dbh->prepare(qq/INSERT INTO "values" (record_id, plugin, key, value) VALUES (?,?,?,?)/);
         foreach my $agent (@agents)
         {
-            my $values = $agent->read;
+            my $values;
+            try { $values = $agent->read }; # Don't let exceptions in a plugin kill this parent process
+            $@->reportFatal(is_fatal => 0) if $@;
             foreach my $key (keys %$values)
             {
                 _execute($sth, $record_id, "$agent", $key, encode_json { value => $values->{$key} });
