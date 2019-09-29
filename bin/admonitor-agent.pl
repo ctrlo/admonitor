@@ -141,7 +141,9 @@ sub setup_db
         CREATE TABLE IF NOT EXISTS records (
             datetime DATETIME DEFAULT CURRENT_TIMESTAMP,
             retrieved SMALLINT DEFAULT 0
-        )
+        );
+        CREATE INDEX records_retrieved_idx ON records (retreived);
+        CREATE INDEX records_datetime_idx ON records (datetime);
     ));
 
     $dbh->do(q(
@@ -150,7 +152,8 @@ sub setup_db
             plugin TEXT,
             key TEXT,
             value TEXT
-        )
+        );
+        CREATE INDEX values_record_id_idx ON "values" (record_id);
     ));
 }
 
