@@ -33,7 +33,7 @@ has stattypes => (
     default => sub {
         [
             {
-                name => 'queue',
+                name => 'queue_count',
                 type => 'decimal',
                 read => 'max',
             },
