@@ -48,7 +48,7 @@ sub read
     my $file = "/etc/duplicity/verify";
     return undef if ! -f $file;
     +{
-        backup_status => read_file $file,
+        backup_status => scalar read_file($file),
     };
 }
 
