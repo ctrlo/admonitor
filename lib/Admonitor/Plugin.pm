@@ -29,6 +29,12 @@ sub write_single
     my $stattype = $options{stattype}
         or panic __x"stattype parameter missing for write_single in {plugin}",
             plugin => $self->name;
+
+    # Work out what value this particular stattype is
+    my %types = map { $_->{name} => $_ } @{$self->stattypes};
+    # Convert to full type
+    $stattype = $types{$stattype};
+
     my $value = $options{value};
 
     if (!defined $value && !$options{allow_null})
@@ -38,14 +44,15 @@ sub write_single
             stattype => $stattype, plugin => $self->name;
         return;
     }
+    my $type_write = $stattype->{type};
     $self->schema->resultset('Statval')->create({
-        datetime  => $self->datetime,
-        host      => $self->host_id,
-        plugin    => $self->name,
-        stattype  => $stattype,
-        decimal   => $value,
-        param     => $options{param},
-        failcount => $options{failcount},
+        datetime    => $self->datetime,
+        host        => $self->host_id,
+        plugin      => $self->name,
+        stattype    => $stattype->{name},
+        param       => $options{param},
+        failcount   => $options{failcount},
+        $type_write => $value,
     });
 }
 
