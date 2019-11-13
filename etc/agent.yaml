@@ -2,6 +2,7 @@ agents:
     - CPU
     - Memory
     - Disk
+    - Duplicity
 #    - OpenDKIM
 #    - Spamd
 #    - Simplelists
