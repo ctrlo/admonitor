@@ -55,4 +55,10 @@ __PACKAGE__->belongs_to(
   'host' => 'Admonitor::Schema::Result::Host',
   {'foreign.id'=>'self.host'});
  
+sub sqlt_deploy_hook {
+    my ($self, $sqlt_table) = @_;
+    $sqlt_table->add_index(name => 'statval_idx_datetime', fields => ['datetime']);
+    $sqlt_table->add_index(name => 'statval_idx_host_datetime', fields => ['host', 'datetime']);
+}
+
 1;

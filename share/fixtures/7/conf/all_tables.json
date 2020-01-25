@@ -1,0 +1,41 @@
+{
+   "belongs_to" : {
+      "fetch" : 0
+   },
+   "has_many" : {
+      "fetch" : 0
+   },
+   "might_have" : {
+      "fetch" : 0
+   },
+   "sets" : [
+      {
+         "quantity" : "all",
+         "class" : "Host"
+      },
+      {
+         "class" : "SSHLogin",
+         "quantity" : "all"
+      },
+      {
+         "class" : "User",
+         "quantity" : "all"
+      },
+      {
+         "class" : "Group",
+         "quantity" : "all"
+      },
+      {
+         "class" : "Statval",
+         "quantity" : "all"
+      },
+      {
+         "quantity" : "all",
+         "class" : "HostChecker"
+      },
+      {
+         "quantity" : "all",
+         "class" : "UserGroup"
+      }
+   ]
+}
