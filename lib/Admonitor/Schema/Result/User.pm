@@ -48,6 +48,11 @@ __PACKAGE__->add_columns(
         data_type   => "datetime",
         is_nullable => 1,
     },
+    notify_all_ssh => {
+        data_type     => "smallint",
+        default_value => 0,
+        is_nullable   => 0,
+    }
 );
  
 __PACKAGE__->set_primary_key('id');

@@ -39,34 +39,27 @@ my $res = Net::DNS::Resolver->new;
 my $guard = schema->txn_scope_guard;
 
 my $logins = rset('SSHLogin')->search({}, {
-    group_by  => [qw/username source_ip host_id/],
+    group_by  => [qw/username source_ip host_id user_id/],
     select => [
         { count => 'datetime', -as => 'count' },
         { max => 'username', -as => 'username' },
         { max => 'source_ip', -as => 'source_ip' },
         { max => 'host_id', -as => 'host_id' },
+        { max => 'user_id', -as => 'user_id' },
     ],
     order_by => 'host_id',
 });
 
-my %group_send; my @logins;
-my $last_host_id;
+my $send; my @logins;
+my $last_host_id; my $last_user_id;
 foreach my $login ($logins->all)
 {
-    my $host_id = $login->get_column('host_id');
-    if ($last_host_id && $host_id != $last_host_id)
-    {
-        my $host = rset('Host')->find($last_host_id);
-        $group_send{$host->group_id} ||= [];
-        push @{$group_send{$host->group_id}}, {
-            host   => $host,
-            logins => [@logins], # copy array for ref
-        };
-        @logins = ();
-    }
-    my $count      = $login->get_column('count');
-    my $username   = $login->get_column('username');
-    my $source_ip  = $login->get_column('source_ip');
+    my $host_id   = $login->get_column('host_id');
+    my $user_id   = $login->get_column('user_id');
+    my $count     = $login->get_column('count');
+    my $username  = $login->get_column('username');
+    my $source_ip = $login->get_column('source_ip');
+
     my $source_ptr = Net::IP->new($source_ip)->reverse_ip;
 
     my $reverse = $source_ip;
@@ -78,40 +71,37 @@ foreach my $login ($logins->all)
         }
     }
 
-    push @logins, "$count logins for username $username from $source_ip ($reverse)";
-    $last_host_id = $host_id;
+    my $user = $user_id && rset('User')->find($user_id);
+    my $name = $user ? $user->firstname." ".$user->surname : 'Unknown';
+    my $host = rset('Host')->find($host_id);
+    my $hn   = $host->name;
+
+    my $msg = "$count logins for username $username by $name to $hn (from $source_ip [$reverse])";
+    if ($user_id)
+    {
+        $send->{$user_id} ||= [];
+        push @{$send->{$user_id}}, $msg;
+    }
+    foreach my $ug ($host->group->user_groups)
+    {
+        next unless $ug->user->notify_all_ssh;
+        push @{$send->{$ug->user_id}}, $msg
+            unless $user_id && $user_id == $ug->user_id; # Already pushed in previous statement
+    }
 }
 
-# Repeated code from above
-my $host = rset('Host')->find($last_host_id);
-$group_send{$host->group_id} ||= [];
-push @{$group_send{$host->group_id}}, {
-    host   => $host,
-    logins => [@logins], # copy array for ref
-};
-
-foreach my $group_id (keys %group_send)
+foreach my $user_id (keys %$send)
 {
-    my $msg = '';
-    foreach my $set (@{$group_send{$group_id}})
-    {
-        $msg .= $set->{host}->name . ":\n";
-        foreach my $login (@{$set->{logins}})
-        {
-            $msg .= "$login\n";
-        }
-        $msg .= "\n";
-    }
-
-    my $group = rset('Group')->find($group_id);
-    foreach my $user_group ($group->user_groups)
-    {
-        my $msg = Mail::Message->build(
-            To      => $user_group->user->email,
-            Subject => "SSH logins",
-            data    => $msg,
-        )->send(via => 'sendmail');
-    }
+    my $user = rset('User')->find($user_id);
+    my $msg = $user->notify_all_ssh
+        ? "This email contains all recent SSH logins for hosts in your group.\n\n"
+        : "This email contains all your recent SSH logins. If these are not correct please contact the ISMS Manager.\n\n";
+    $msg .= join "\n", @{$send->{$user_id}};
+    Mail::Message->build(
+        To      => $user->email,
+        Subject => "SSH logins",
+        data    => $msg,
+    )->send(via => 'sendmail');
 }
 
 rset('SSHLogin')->delete;

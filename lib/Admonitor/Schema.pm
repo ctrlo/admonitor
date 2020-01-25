@@ -5,7 +5,7 @@ use warnings;
  
 use parent 'DBIx::Class::Schema';
  
-our $VERSION = 7;
+our $VERSION = 8;
  
 Admonitor::Schema->load_namespaces(
    default_resultset_class => 'ResultSet',

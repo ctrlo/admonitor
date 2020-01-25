@@ -15,6 +15,11 @@ __PACKAGE__->add_columns(
     is_foreign_key => 1,
     is_nullable    => 0,
   },
+  user_id => {
+    data_type      => "integer",
+    is_foreign_key => 1,
+    is_nullable    => 1,
+  },
   username => {
     data_type => 'varchar',
     size      => 50,
@@ -27,6 +32,10 @@ __PACKAGE__->add_columns(
       data_type   => "datetime",
       is_nullable => 0,
   },
+  fingerprint => {
+    data_type => 'varchar',
+    size      => 64,
+  },
 );
  
 __PACKAGE__->set_primary_key('id');
@@ -34,5 +43,9 @@ __PACKAGE__->set_primary_key('id');
 __PACKAGE__->belongs_to(
   'host' => 'Admonitor::Schema::Result::Host',
   {'foreign.id'=>'self.host_id'});
+
+__PACKAGE__->belongs_to(
+  'user' => 'Admonitor::Schema::Result::User',
+  {'foreign.id'=>'self.user_id'});
 
 1;

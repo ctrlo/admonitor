@@ -24,8 +24,9 @@ try {
     $msg = Mail::Message->read(\*STDIN);
 
     # Accepted publickey for root from 81.187.7.168 port 59784 ssh2: RSA 52:92:3e:c0:6c:40:9a:5b:f5:c2:6c:d2:0d:50:02:63
-    $msg->body =~ /Accepted publickey for ([a-z0-9]+) from ([:\.0-9a-f]+) port/;
-    my ($username, $ip) = ($1, $2);
+    # Accepted publickey for simple from 2001:41c8:51:71b:fcff:ff:fe00:41eb port 60182 ssh2: RSA SHA256:peMgY8E9Q4yjZvRYg2WLAwANTg4dSznotBiHqvnzyvY
+    $msg->body =~ /Accepted publickey for ([a-z0-9]+) from ([:\.0-9a-f]+) port.* (.*)$/;
+    my ($username, $ip, $fingerprint) = ($1, $2, $3);
 
     my $host = rset('Host')->search({ name => $msg->sender->host })->next;
     if (!$host)
@@ -34,11 +35,17 @@ try {
         exit;
     }
 
+    my $user = rset('Fingerprint')->search({
+        fingerprint => $fingerprint,
+    })->next;
+
     rset('SSHLogin')->create({
-        host_id   => $host->id,
-        username  => $username,
-        source_ip => $ip,
-        datetime  => DateTime->now,
+        host_id     => $host->id,
+        user_id     => $user && $user->user_id,
+        username    => $username,
+        source_ip   => $ip,
+        datetime    => DateTime->now,
+        fingerprint => $fingerprint,
     });
 };
 
