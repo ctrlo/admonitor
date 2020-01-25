@@ -31,6 +31,19 @@ use Log::Report 'admonitor';
 use Net::Async::HTTP;
 use Math::NumberCruncher;
 
+has stattypes => (
+    is      => 'ro',
+    default => sub {
+        [
+            {
+                name => 'time',
+                type => 'decimal',
+                read => 'max',
+            },
+        ],
+    },
+);
+
 has io_object => (
     is => 'lazy',
 );

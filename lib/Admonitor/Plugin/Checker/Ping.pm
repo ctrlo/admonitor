@@ -30,6 +30,19 @@ use IO::Async::Timer::Periodic;
 use Net::Async::Ping;
 use Math::NumberCruncher;
 
+has stattypes => (
+    is      => 'ro',
+    default => sub {
+        [
+            {
+                name => 'time',
+                type => 'decimal',
+                read => 'max',
+            },
+        ],
+    },
+);
+
 has io_object => (
     is => 'lazy',
 );
