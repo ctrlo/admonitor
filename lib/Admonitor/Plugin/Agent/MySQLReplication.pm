@@ -43,6 +43,7 @@ sub read
 {   my $self   = shift;
 
     my $config = $self->config;
+    # GRANT REPLICATION CLIENT ON *.* TO 'repcheck'@'localhost' IDENTIFIED BY 'xxx';
     my $dbh = DBI->connect($config->{dsn}, $config->{username}, $config->{password});
 
     my $res = $dbh->selectrow_hashref("SHOW SLAVE STATUS"); # Dies with exception if fails
