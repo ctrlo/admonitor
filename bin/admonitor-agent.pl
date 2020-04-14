@@ -67,10 +67,17 @@ threads->create(sub {
         {
             my $values;
             try { $values = $agent->read }; # Don't let exceptions in a plugin kill this parent process
-            $@->reportFatal(is_fatal => 0) if $@;
-            foreach my $key (keys %$values)
+            if ($@)
             {
-                _execute($sth, $record_id, "$agent", $key, encode_json { value => $values->{$key} });
+                my $error = "$agent failed: ".$@->wasFatal->message->toString;
+                _execute($sth, $record_id, "Agent::Admonitor", 'error_message', encode_json { value => $error });
+                $@->reportFatal(is_fatal => 0) if $@;
+            }
+            else {
+                foreach my $key (keys %$values)
+                {
+                    _execute($sth, $record_id, "$agent", $key, encode_json { value => $values->{$key} });
+                }
             }
         }
         sleep ($config->{read_interval} || 300);

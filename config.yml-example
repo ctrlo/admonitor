@@ -35,6 +35,8 @@ admonitor:
   default_port: 9099
   plugins:
     agents:
+      Admonitor:
+        enabled: 1
       Memory:
         enabled: 1
       CPU:
