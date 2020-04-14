@@ -47,6 +47,10 @@ admonitor:
         enabled: 0
       Simplelists:
         enabled: 0
+      Duplicity:
+        enabled: 1
+      MySQLReplication:
+        enabled: 1
     checkers:
       Ping:
         enabled: 1
