@@ -22,6 +22,7 @@ use strict;
 use warnings;
 
 use DBI;
+use Log::Report;
 use Moo;
 
 extends 'Admonitor::Plugin::Agent';
@@ -44,7 +45,8 @@ sub read
 
     my $config = $self->config;
     # GRANT REPLICATION CLIENT ON *.* TO 'repcheck'@'localhost' IDENTIFIED BY 'xxx';
-    my $dbh = DBI->connect($config->{dsn}, $config->{username}, $config->{password});
+    my $dbh = DBI->connect($config->{dsn}, $config->{username}, $config->{password})
+        or error $DBI::errstr;
 
     my $res = $dbh->selectrow_hashref("SHOW SLAVE STATUS"); # Dies with exception if fails
     my $running = $res->{Slave_SQL_Running} eq 'Yes' && $res->{Slave_IO_Running} eq 'Yes';
