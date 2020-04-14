@@ -26,5 +26,9 @@ has schema => (
     is => 'ro',
 );
 
+has config => (
+    is => 'ro',
+);
+
 1;
 

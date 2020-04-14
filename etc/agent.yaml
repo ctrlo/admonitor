@@ -3,6 +3,10 @@ agents:
     - Memory
     - Disk
     - Duplicity
+#    - MySQLReplication:
+#        dsn: DBI:mysql:host=localhost
+#        username: repcheck
+#        password: XXX
 #    - OpenDKIM
 #    - Spamd
 #    - Simplelists

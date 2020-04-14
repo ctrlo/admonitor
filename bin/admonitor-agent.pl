@@ -39,7 +39,12 @@ my $db = {
 my $dbh = DBI->connect($db->{dsn},"","", $db->{options});
 setup_db($dbh);
 
-my @agent_names = @{$config->{agents} || []}
+my @agents_config = map {
+    +{
+        name   => ref $_ ? (keys %$_)[0] : $_,
+        config => ref $_ ? (values %$_)[0] : {},
+    }
+} @{$config->{agents} || []}
     or error "No agents configured";
 
 threads->create(sub {
@@ -47,11 +52,11 @@ threads->create(sub {
     my $dbh = DBI->connect($db->{dsn},"","", $db->{options});
 
     my @agents = map {
-        my $name = "Admonitor::Plugin::Agent::$_";
+        my $name = "Admonitor::Plugin::Agent::$_->{name}";
         eval "require $name";
         panic $@ if $@; # Report somewhere useful if checker can't be loaded
-        $name->new;
-    } @agent_names;
+        $name->new(config => $_->{config});
+    } @agents_config;
     while (1)
     {
         my $sth  = $dbh->prepare("INSERT INTO records (retrieved) VALUES (0)");
