@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 package Admonitor;
 
 use Admonitor::Plugin::Agents;
+use JSON qw/encode_json/;
 use Dancer2;
 use Dancer2::Plugin::DBIC;
 use Dancer2::Plugin::LogReport 'admonitor';
@@ -26,7 +27,6 @@ use Dancer2::Plugin::LogReport;
 use Dancer2::Plugin::Auth::Extensible;
 use DateTime::Format::Strptime;
 use DateTime::Format::DBI;
-use JSON qw/encode_json/;
 use Mail::Message;
 
 our $VERSION = '0.1';
