@@ -27,13 +27,19 @@ extends 'Admonitor::Plugin::Agent';
 
 has maximum_use_percentage => (
     is      => 'ro',
-    default => sub {
-        my $self = shift;
-        my $default_value = $self->config->{maximum_use_percentage};
-        $default_value //= 80;
-        return scalar $default_value;
-    },
+    default => \&_default_maximum_use_percentage,
 );
+
+sub _default_maximum_use_percentage {
+    my $self = shift;
+    my $config = $self->config;
+    my $default_value;
+    if ( exists $config->{maximum_use_percentage} ) {
+        $default_value = $config->{maximum_use_percentage};
+    }
+    $default_value //= 80;
+    return scalar $default_value;
+}
 
 has stattypes => (
     is      => 'ro',
@@ -69,7 +75,12 @@ sub write
 sub alarm
 {   my ($self, $data) = @_;
     my $realusedper = realusedper($data->{realfreeper});
-    my $limit = $data->{maximum_use_percentage};
+    # Old versions of the agent might not send
+    # $data->{maximum_use_percentage} to the server, so fall back to the
+    # server's configured value.
+    my $limit = exists $data->{maximum_use_percentage}
+        ? $data->{maximum_use_percentage}
+        : $self->maximum_use_percentage;
     $self->send_alarm("Real used memory greater than $limit% ($realusedper%)")
         if $realusedper && $realusedper > $limit;
 }
