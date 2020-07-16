@@ -25,6 +25,22 @@ use Moo;
 
 extends 'Admonitor::Plugin::Agent';
 
+has maximum_use_percentage => (
+    is      => 'ro',
+    default => \&_default_maximum_use_percentage,
+);
+
+sub _default_maximum_use_percentage {
+    my $self = shift;
+    my $config = $self->config;
+    my $default_value;
+    if ( exists $config->{maximum_use_percentage} ) {
+        $default_value = $config->{maximum_use_percentage};
+    }
+    $default_value //= 80;
+    return scalar $default_value;
+}
+
 has stattypes => (
     is      => 'ro',
     default => sub {
@@ -43,6 +59,7 @@ sub read
     my $lxs = Sys::Statistics::Linux->new(memstats => 1);
     my $stat = $lxs->get;
     {
+        maximum_use_percentage => $self->maximum_use_percentage,
         realfreeper => $stat->memstats->{realfreeper},
     };
 }
@@ -58,8 +75,14 @@ sub write
 sub alarm
 {   my ($self, $data) = @_;
     my $realusedper = realusedper($data->{realfreeper});
-    $self->send_alarm("Real used memory greater than 80% ($realusedper%)")
-        if $realusedper && $realusedper > 80;
+    # Old versions of the agent might not send
+    # $data->{maximum_use_percentage} to the server, so fall back to the
+    # server's configured value.
+    my $limit = exists $data->{maximum_use_percentage}
+        ? $data->{maximum_use_percentage}
+        : $self->maximum_use_percentage;
+    $self->send_alarm("Real used memory greater than $limit% ($realusedper%)")
+        if $realusedper && $realusedper > $limit;
 }
 
 sub realusedper
