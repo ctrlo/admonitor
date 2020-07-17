@@ -93,7 +93,7 @@ sub do_host
         error __x"Timeout reading data from {host} during authentication", host => $host->name;
     }
     $response eq "OK\n"
-        or error "Authentication failed";
+        or error __x"Authentication failed for host {host}", host => $host->name;
 
     $response = <$client>;
     if (!$response && ( 0+$! == ETIMEDOUT || 0+$! == EWOULDBLOCK )) {
