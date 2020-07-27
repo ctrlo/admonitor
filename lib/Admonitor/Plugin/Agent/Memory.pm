@@ -32,11 +32,10 @@ has maximum_use_percentage => (
 
 sub _default_maximum_use_percentage {
     my $self = shift;
-    my $config = $self->config;
-    my $default_value;
-    if ( exists $config->{maximum_use_percentage} ) {
-        $default_value = $config->{maximum_use_percentage};
-    }
+    my $default_value = $self->schema->resultset('HostAlarm')
+        ->search({ host => $self->host_id, plugin => 'Agent::Memory' })
+        ->get_column('decimal')
+        ->first;
     $default_value //= 80;
     return scalar $default_value;
 }
