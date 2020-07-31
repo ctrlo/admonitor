@@ -36,6 +36,11 @@ has stattypes => (
                 type => 'decimal',
                 read => 'min',
             },
+            {
+                name => 'replication_delay',
+                type => 'decimal',
+                read => 'max',
+            },
         ],
     },
 );
@@ -50,9 +55,11 @@ sub read
 
     my $res = $dbh->selectrow_hashref("SHOW SLAVE STATUS"); # Dies with exception if fails
     my $running = $res->{Slave_SQL_Running} eq 'Yes' && $res->{Slave_IO_Running} eq 'Yes';
+    my $delay   = $res->{Seconds_Behind_Master};
 
     +{
         replication_running => $running,
+        delay               => $delay,
     };
 }
 
@@ -64,6 +71,11 @@ sub write
         param    => undef, # Not used
         value    => $value,
     );
+    $self->write_single(
+        stattype => 'replication_delay',
+        param    => undef, # Not used
+        value    => $data->{deplication_delay},
+    );
 }
 
 sub alarm
@@ -71,6 +83,9 @@ sub alarm
     my $exists = $data->{replication_running};
     $self->send_alarm("MySQL replication has failed")
         if !$exists;
+    my $delay = $data->{delay};
+    $self->send_alarm("MySQL replication is lagging by $delay seconds")
+        if $delay > 600;
 }
 
 1;
