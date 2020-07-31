@@ -105,12 +105,15 @@ sub do_host
     error __x"No data received from {host}", host => $host->name
         if !@{$serverdata->{records}};
 
+    my $schema = schema();
     my @plugins = map {
         my $name = "Admonitor::Plugin::Agent::$_";
         eval "require $name";
         panic $@ if $@; # Report somewhere useful if checker can't be loaded
         $name->new(
-            schema => schema,
+            schema      => $schema,
+            host_id     => $host->id,
+            host_name   => $host->name,
         );
     } keys %{config->{admonitor}->{plugins}->{agents}};
 
@@ -123,7 +126,6 @@ sub do_host
             my $data = $record->{$plugin->name}
                 or next;
             $plugin->datetime($time);
-            $plugin->host_id($host->id);
             $plugin->write($data);
             $alarms->{$plugin} = 1
                 if !$alarms->{$plugin} && $plugin->alarm($data);

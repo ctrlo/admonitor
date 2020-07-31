@@ -23,6 +23,12 @@ has host_id => (
     is => 'rw',
 );
 
+# Used for logging
+has host_name => (
+    is => 'ro',
+    default => sub { 'UNKNOWN' },
+);
+
 sub write_single
 {   my ($self, %options) = @_;
 
@@ -39,9 +45,9 @@ sub write_single
 
     if (!defined $value && !$options{allow_null})
     {
-        warning __x"Not writing undefined value for '{stattype}' in plugin '{plugin}'. ".
+        warning __x"Not writing undefined value for '{stattype}' in plugin '{plugin}' on host '{host}'. ".
             "Use allow_null option to override.",
-            stattype => $stattype, plugin => $self->name;
+            stattype => $stattype, plugin => $self->name, host => $self->host_name;
         return;
     }
     my $type_write = $stattype->{type};
