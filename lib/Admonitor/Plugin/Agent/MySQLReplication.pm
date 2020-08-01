@@ -83,9 +83,9 @@ sub alarm
     my $exists = $data->{replication_running};
     $self->send_alarm("MySQL replication has failed")
         if !$exists;
-    my $delay = $data->{delay};
+    my $delay = $data->{replication_delay};
     $self->send_alarm("MySQL replication is lagging by $delay seconds")
-        if $delay > 600;
+        if $delay && $delay > 600;
 }
 
 1;
