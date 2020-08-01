@@ -65,17 +65,17 @@ sub read
 
 sub write
 {   my ($self, $data) = @_;
-    my $value = $data->{replication_running};
-    $self->write_single(
-        stattype => 'replication_running',
-        param    => undef, # Not used
-        value    => $value,
-    );
-    $self->write_single(
-        stattype => 'replication_delay',
-        param    => undef, # Not used
-        value    => $data->{deplication_delay},
-    );
+    foreach my $stattype (@{$self->stattypes})
+    {
+        my $name = $stattype->{name};
+        next unless exists $data->{$name};
+        my $value = $data->{$name};
+        $self->write_single(
+            stattype => $name,
+            param    => undef, # Not used
+            value    => $value,
+        );
+    }
 }
 
 sub alarm
