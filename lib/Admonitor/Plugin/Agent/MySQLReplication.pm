@@ -59,7 +59,7 @@ sub read
 
     +{
         replication_running => $running,
-        delay               => $delay,
+        replication_delay   => $delay,
     };
 }
 
