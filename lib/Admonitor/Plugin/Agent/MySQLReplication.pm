@@ -80,12 +80,18 @@ sub write
 
 sub alarm
 {   my ($self, $data) = @_;
-    my $exists = $data->{replication_running};
-    $self->send_alarm("MySQL replication has failed")
-        if !$exists;
-    my $delay = $data->{replication_delay};
-    $self->send_alarm("MySQL replication is lagging by $delay seconds")
-        if $delay && $delay > 600;
+    if (exists $data->{replication_running})
+    {
+        my $exists = $data->{replication_running};
+        $self->send_alarm("MySQL replication has failed")
+            if !$exists;
+    }
+    if (exists $data->{replication_delay})
+    {
+        my $delay = $data->{replication_delay};
+        $self->send_alarm("MySQL replication is lagging by $delay seconds")
+            if defined $delay && $delay > 600;
+    }
 }
 
 1;
