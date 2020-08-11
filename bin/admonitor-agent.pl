@@ -5,7 +5,6 @@ use warnings;
 
 use Config::Any;
 use DBI;
-use File::Temp qw/ tempfile /;
 use IO::Socket::SSL;
 use Cpanel::JSON::XS;
 use Log::Report 'admonitor';
