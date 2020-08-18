@@ -175,9 +175,16 @@ sub alarm {}
 
 sub send_alarm
 {   my ($self, $error) = @_;
-    my $host = $self->_hosts->host($self->host_id);
+    my $host = $self->schema->resultset('Host')->find(
+        $self->host_id,
+        { prefetch => { group => [ 'alarm_message', { user_groups => 'user' } ] } },
+    );
     my $hostname = $host->name;
     my $body = "An alarm was received for host $hostname: $error";
+    my $alarm_message = $host->group->alarm_message;
+    if ( defined $alarm_message ) {
+        $body .= "\n\n" . $alarm_message->message_suffix;
+    }
     foreach my $user_group ($host->group->user_groups)
     {
         my $msg = Mail::Message->build(
