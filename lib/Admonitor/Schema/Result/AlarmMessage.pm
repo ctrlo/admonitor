@@ -21,6 +21,11 @@ __PACKAGE__->add_columns(
         data_type           => 'text',
         is_nullable         => 0,
     },
+    plugin => {
+        data_type           => 'varchar',
+        size                => 50,
+        is_nullable         => 0,
+    },
 );
 
 __PACKAGE__->set_primary_key('id');
