@@ -22,4 +22,9 @@ __PACKAGE__->has_many(
   'user_groups' => 'Admonitor::Schema::Result::UserGroup',
   {'foreign.group_id'=>'self.id'});
 
+__PACKAGE__->might_have(
+    alarm_message => 'Admonitor::Schema::Result::AlarmMessage',
+    { 'foreign.group_id' => 'self.id'},
+);
+
 1;

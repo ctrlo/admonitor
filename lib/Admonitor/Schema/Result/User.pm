@@ -52,7 +52,12 @@ __PACKAGE__->add_columns(
         data_type     => "smallint",
         default_value => 0,
         is_nullable   => 0,
-    }
+    },
+    web_enabled => {
+        data_type     => "boolean",
+        default_value => 0,
+        is_nullable   => 0,
+    },
 );
  
 __PACKAGE__->set_primary_key('id');

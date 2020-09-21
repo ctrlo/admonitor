@@ -72,4 +72,17 @@ plugins:
         PrintError: 1
         quote_names: 1
         mysql_enable_utf8: 1 # or  pg_enable_utf8: 1
-
+  Auth::Extensible:
+    disable_roles: 1
+    reset_password_handler: 1
+    mailer:
+      module: Mail::Message
+      options:
+        via: sendmail
+    mail_from: '"Admonitor" <admonitor@example.com>'
+    realms:
+      users:
+        provider: DBIC
+        users_table: user
+        user_valid_conditions:
+          web_enabled: 1

@@ -33,7 +33,11 @@ has maximum_use_percentage => (
 sub _default_maximum_use_percentage {
     my $self = shift;
     my $default_value = $self->schema->resultset('HostAlarm')
-        ->search({ host => $self->host_id, plugin => 'Agent::Memory' })
+        ->search({
+            host => $self->host_id,
+            plugin => 'Agent::Memory',
+            stattype => 'maximum_use_percentage',
+        })
         ->get_column('decimal')
         ->first;
     $default_value //= 80;
