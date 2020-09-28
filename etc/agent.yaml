@@ -10,6 +10,7 @@ agents:
 #    - OpenDKIM
 #    - Spamd
 #    - Simplelists
+    - UFW
 #read_interval: 900
 #port: 9099
 password: secret

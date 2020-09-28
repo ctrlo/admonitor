@@ -205,9 +205,8 @@ has name => (
 
 sub _build_name
 {   my $self = shift;
-    my $name = ref $self;
-    $name =~ s/.*::(.*::.*)/$1/;
-    $name;
+    ref($self) =~ m/ :: ( [^:]+ :: [^:]+ ) \z /x;
+    $1;
 }
 
 sub _as_string { $_[0]->name; }
