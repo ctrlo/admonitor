@@ -147,9 +147,9 @@ Manually connect to the database and then:
 
 =item Add a row to the host table for each host to be monitored
 
-Only name and password should be added. The password for each host should match
-the corresponding password in the
-configuration file on the host.
+Only name, password and group_id should be added. The password for each
+host should match the corresponding password in the configuration file
+on the host.
 
 =item Add rows to the host_checker table
 
