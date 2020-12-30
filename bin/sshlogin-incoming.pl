@@ -35,18 +35,19 @@ try {
         exit;
     }
 
-    my $user = rset('Fingerprint')->search({
+    foreach my $user (rset('Fingerprint')->search({
         fingerprint => $fingerprint,
-    })->next;
-
-    rset('SSHLogin')->create({
-        host_id     => $host->id,
-        user_id     => $user && $user->user_id,
-        username    => $username,
-        source_ip   => $ip,
-        datetime    => DateTime->now,
-        fingerprint => $fingerprint,
-    });
+    })->all)
+    {
+        rset('SSHLogin')->create({
+            host_id     => $host->id,
+            user_id     => $user && $user->user_id,
+            username    => $username,
+            source_ip   => $ip,
+            datetime    => DateTime->now,
+            fingerprint => $fingerprint,
+        });
+    }
 };
 
 if ($@)

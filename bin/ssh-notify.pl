@@ -39,26 +39,41 @@ my $res = Net::DNS::Resolver->new;
 my $guard = schema->txn_scope_guard;
 
 my $logins = rset('SSHLogin')->search({}, {
-    group_by  => [qw/username source_ip host_id user_id/],
+    group_by  => [qw/username source_ip host_id fingerprint/],
     select => [
         { count => 'datetime', -as => 'count' },
         { max => 'username', -as => 'username' },
         { max => 'source_ip', -as => 'source_ip' },
         { max => 'host_id', -as => 'host_id' },
-        { max => 'user_id', -as => 'user_id' },
+        { max => 'fingerprint', -as => 'fingerprint' },
     ],
     order_by => 'host_id',
 });
 
 my $send; my @logins;
-my $last_host_id; my $last_user_id;
+
+# Produce a lookup hash to signify which users and their groups have
+# notification for all SSH logins. These take precedence over a user's
+# individual logins
+my $notify_all;
+foreach my $user (rset('User')->search({ notify_all_ssh => 1 })->all)
+{
+    foreach my $user_group ($user->user_groups->all)
+    {
+        foreach my $fingerprint ($user->fingerprints)
+        {
+            $notify_all->{$fingerprint->fingerprint}->{$user_group->group_id} = 1;
+        }
+    }
+}
+
 foreach my $login ($logins->all)
 {
-    my $host_id   = $login->get_column('host_id');
-    my $user_id   = $login->get_column('user_id');
-    my $count     = $login->get_column('count');
-    my $username  = $login->get_column('username');
-    my $source_ip = $login->get_column('source_ip');
+    my $host_id     = $login->get_column('host_id');
+    my $count       = $login->get_column('count');
+    my $username    = $login->get_column('username');
+    my $source_ip   = $login->get_column('source_ip');
+    my $fingerprint = $login->get_column('fingerprint');
 
     my $source_ptr = Net::IP->new($source_ip)->reverse_ip;
 
@@ -71,22 +86,33 @@ foreach my $login ($logins->all)
         }
     }
 
-    my $user = $user_id && rset('User')->find($user_id);
-    my $name = $user ? $user->firstname." ".$user->surname : 'Unknown';
-    my $host = rset('Host')->find($host_id);
-    my $hn   = $host->name;
+    # Loop through each user that has this fingerprint. De-duplicate logins,
+    # such that a user is only notifed once for each login. If a user is in a
+    # group for all SSH notifications, then prioritise that and do not send to
+    # the user's individual email address in that case. The idea is that a
+    # single SSH fingerprint can be in use for multiple users/groups, and that
+    # the group takes precedence for notifications.
+    my %this_done;
+    foreach my $fp (rset('Fingerprint')->search({ fingerprint => $fingerprint})->all)
+    {
+        my $user = $fp->user;
+        my $name = $user ? $user->firstname." ".$user->surname : 'Unknown';
+        my $host = rset('Host')->find($host_id);
+        my $hn   = $host->name;
 
-    my $msg = "$count logins for username $username by $name to $hn (from $source_ip [$reverse])";
-    if ($user_id)
-    {
-        $send->{$user_id} ||= [];
-        push @{$send->{$user_id}}, $msg;
-    }
-    foreach my $ug ($host->group->user_groups)
-    {
-        next unless $ug->user->notify_all_ssh;
-        push @{$send->{$ug->user_id}}, $msg
-            unless $user_id && $user_id == $ug->user_id; # Already pushed in previous statement
+        my $msg = "$count logins for username $username by $name to $hn (from $source_ip [$reverse])";
+        foreach my $ug ($host->group->user_groups)
+        {
+            next unless $ug->user->notify_all_ssh;
+            next if $this_done{$ug->user_id};
+            push @{$send->{$ug->user_id}}, $msg;
+            $this_done{$ug->user_id} = 1;
+        }
+        if (!$notify_all->{$fingerprint}->{$host->group_id})
+        {
+            $send->{$user->id} ||= [];
+            push @{$send->{$user->id}}, $msg;
+        }
     }
 }
 

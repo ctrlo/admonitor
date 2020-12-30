@@ -62,6 +62,14 @@ __PACKAGE__->add_columns(
  
 __PACKAGE__->set_primary_key('id');
  
+__PACKAGE__->has_many(
+  'user_groups' => 'Admonitor::Schema::Result::UserGroup',
+  {'foreign.user_id'=>'self.id'});
+
+__PACKAGE__->has_many(
+  'fingerprints' => 'Admonitor::Schema::Result::Fingerprint',
+  {'foreign.user_id'=>'self.id'});
+
 sub sqlt_deploy_hook {
     my ($self, $sqlt_table) = @_;
     $sqlt_table->add_index(name => 'user_idx_email', fields => [ 'email' ]);
