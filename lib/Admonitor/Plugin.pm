@@ -184,16 +184,17 @@ sub send_alarm
     my $body = "An alarm was received for host $hostname: $error";
     foreach my $user_group ($group->user_groups)
     {
+        my $this_body = $body;
         my $alarm_message = $self->schema->resultset('AlarmMessage')->find(
             { group_id => $group->id, plugin => $self->name }
         );
         if ( defined $alarm_message ) {
-            $body .= "\n\n" . $alarm_message->message_suffix;
+            $this_body .= "\n\n" . $alarm_message->message_suffix;
         }
         my $msg = Mail::Message->build(
             To      => $user_group->user->email,
             Subject => "Admonitor alarm",
-            data    => $body,
+            data    => $this_body,
         )->send(via => 'sendmail');
     }
     1; # Report that an alarm has been sent
