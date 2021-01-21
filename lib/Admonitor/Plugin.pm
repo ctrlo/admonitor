@@ -189,12 +189,12 @@ sub send_alarm
             { group_id => $group->id, plugin => $self->name }
         );
         if ( defined $alarm_message ) {
-            $this_body .= "\n\n" . $alarm_message->message_suffix;
+            $this_body .= "\n\n" . __x($alarm_message->message_suffix, host => $hostname);
         }
         my $msg = Mail::Message->build(
             To      => $user_group->user->email,
             Subject => "Admonitor alarm",
-            data    => $this_body,
+            data    => "$this_body",
         )->send(via => 'sendmail');
     }
     1; # Report that an alarm has been sent
