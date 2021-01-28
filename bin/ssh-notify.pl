@@ -92,10 +92,11 @@ foreach my $login ($logins->all)
     # the user's individual email address in that case. The idea is that a
     # single SSH fingerprint can be in use for multiple users/groups, and that
     # the group takes precedence for notifications.
-    my %this_done;
-    foreach my $fp (rset('Fingerprint')->search({ fingerprint => $fingerprint})->all)
-    {
-        my $user = $fp->user;
+    my $this_done;
+    my @fps = rset('Fingerprint')->search({ fingerprint => $fingerprint})->all;
+    @fps = (undef) if !@fps; # Ensure report of fingerprint doesn't match any users
+    foreach my $fp (@fps)
+    {   my $user = $fp && $fp->user;
         my $name = $user ? $user->firstname." ".$user->surname : 'Unknown';
         my $host = rset('Host')->find($host_id);
         my $hn   = $host->name;
@@ -104,11 +105,11 @@ foreach my $login ($logins->all)
         foreach my $ug ($host->group->user_groups)
         {
             next unless $ug->user->notify_all_ssh;
-            next if $this_done{$ug->user_id};
+            next if $this_done->{$ug->user_id}->{$source_ip};
             push @{$send->{$ug->user_id}}, $msg;
-            $this_done{$ug->user_id} = 1;
+            $this_done->{$ug->user_id}->{$source_ip} = 1;
         }
-        if (!$notify_all->{$fingerprint}->{$host->group_id})
+        if ($user && !$notify_all->{$fingerprint}->{$host->group_id})
         {
             $send->{$user->id} ||= [];
             push @{$send->{$user->id}}, $msg;
