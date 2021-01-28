@@ -25,25 +25,6 @@ use Moo;
 
 extends 'Admonitor::Plugin::Agent';
 
-has maximum_use_percentage => (
-    is      => 'lazy',
-    builder => \&_default_maximum_use_percentage,
-);
-
-sub _default_maximum_use_percentage {
-    my $self = shift;
-    my $default_value = $self->schema->resultset('HostAlarm')
-        ->search({
-            host => $self->host_id,
-            plugin => 'Agent::Memory',
-            stattype => 'maximum_use_percentage',
-        })
-        ->get_column('decimal')
-        ->first;
-    $default_value //= 80;
-    return scalar $default_value;
-}
-
 has stattypes => (
     is      => 'ro',
     default => sub {
@@ -75,7 +56,8 @@ sub write
 sub alarm
 {   my ($self, $data) = @_;
     my $realusedper = realusedper($data->{realfreeper});
-    my $limit = $self->maximum_use_percentage;
+    my $limit = $self->thresholds->{maximum_use_percentage}->{$self->host_id}
+        // 80;
     $self->send_alarm("Real used memory greater than $limit% ($realusedper%)")
         if $realusedper && $realusedper > $limit;
 }

@@ -212,5 +212,21 @@ sub _build_name
 
 sub _as_string { $_[0]->name; }
 
+has thresholds => (
+    is => 'lazy',
+);
+
+sub _build_thresholds
+{   my $self = shift;
+    my @thresholds = $self->schema->resultset('HostAlarm')
+        ->search({
+            plugin => $self->name,
+        })->all;
+    my $mapped = {};
+    $mapped->{$_->stattype}->{$_->get_column('host')} = $_->decimal
+        foreach @thresholds;
+    return $mapped;
+}
+
 1;
 

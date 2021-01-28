@@ -88,9 +88,11 @@ sub alarm
     }
     if (exists $data->{replication_delay})
     {
+        my $limit = $self->thresholds->{replication_delay}->{$self->host_id}
+            // 600;
         my $delay = $data->{replication_delay};
         $self->send_alarm("MySQL replication is lagging by $delay seconds")
-            if defined $delay && $delay > 600;
+            if defined $delay && $delay > $limit;
     }
 }
 
