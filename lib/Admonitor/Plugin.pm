@@ -179,6 +179,7 @@ sub send_alarm
         $self->host_id,
         { prefetch => { group => { user_groups => 'user' } } },
     );
+    return if $host->silenced;
     my $hostname = $host->name;
     my $group = $host->group;
     my $body = "An alarm was received for host $hostname: $error";
