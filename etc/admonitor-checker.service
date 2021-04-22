@@ -1,5 +1,6 @@
 [Unit]
 Description=Admonitor Checker
+After=mysql.service
 
 [Service]
 ExecStart=/srv/admonitor/bin/checker.pl
