@@ -69,7 +69,17 @@ sub write
     {
         my $name = $stattype->{name};
         next unless exists $data->{$name};
+        # There will be no value if replication is not running, and undef
+        # values cannot be written
         my $value = $data->{$name};
+        if ($name eq 'replication_delay')
+        {
+            next if !defined $value || $value eq '';
+        }
+        elsif ($name = 'replication_running')
+        {
+            $value = $value ? 1 : 0;
+        }
         $self->write_single(
             stattype => $name,
             param    => undef, # Not used
