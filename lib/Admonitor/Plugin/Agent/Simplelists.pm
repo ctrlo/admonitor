@@ -71,6 +71,7 @@ sub alarm
     my %threshold = (
         approve  => 2,
         incoming => 2,
+        store    => 100,
     );
     foreach my $queue (@queues)
     {
