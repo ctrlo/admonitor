@@ -31,7 +31,7 @@ use IO::Socket::SSL;
 use IO::Socket::Timeout;
 use Errno qw(ETIMEDOUT EWOULDBLOCK);
 
-my @hosts = rset('Host')->all;
+my @hosts = rset('Host')->search({ collect_agents => 1 })->all;
 
 foreach my $host (@hosts)
 {

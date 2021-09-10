@@ -1,0 +1,53 @@
+{
+   "might_have" : {
+      "fetch" : 0
+   },
+   "has_many" : {
+      "fetch" : 0
+   },
+   "sets" : [
+      {
+         "quantity" : "all",
+         "class" : "UserGroup"
+      },
+      {
+         "class" : "Group",
+         "quantity" : "all"
+      },
+      {
+         "class" : "SSHLogin",
+         "quantity" : "all"
+      },
+      {
+         "class" : "HostChecker",
+         "quantity" : "all"
+      },
+      {
+         "quantity" : "all",
+         "class" : "HostAlarm"
+      },
+      {
+         "quantity" : "all",
+         "class" : "Fingerprint"
+      },
+      {
+         "class" : "Host",
+         "quantity" : "all"
+      },
+      {
+         "class" : "AlarmMessage",
+         "quantity" : "all"
+      },
+      {
+         "class" : "Statval",
+         "quantity" : "all"
+      },
+      {
+         "class" : "User",
+         "quantity" : "all"
+      }
+   ],
+   "belongs_to" : {
+      "fetch" : 0
+   }
+}

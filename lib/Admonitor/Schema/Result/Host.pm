@@ -33,6 +33,11 @@ __PACKAGE__->add_columns(
     default_value => 0,
     is_nullable   => 0,
   },
+  collect_agents => {
+    data_type     => 'smallint',
+    default_value => 1,
+    is_nullable   => 0,
+  },
 );
  
 __PACKAGE__->set_primary_key('id');
