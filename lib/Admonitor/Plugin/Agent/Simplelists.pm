@@ -69,9 +69,9 @@ sub write
 sub alarm
 {   my ($self, $data) = @_;
     my %threshold = (
-        approve  => 2,
-        incoming => 2,
-        store    => 100,
+        approve  => $self->thresholds->{queue_count}->{$self->host_id} || 2,
+        incoming => $self->thresholds->{queue_count}->{$self->host_id} || 2,
+        store    => $self->thresholds->{queue_count}->{$self->host_id} || 100,
     );
     foreach my $queue (@queues)
     {
