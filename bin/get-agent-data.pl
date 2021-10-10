@@ -46,6 +46,12 @@ foreach my $host (@hosts)
     }
 }
 
+# Remove stats over one month old
+my $month = DateTime->now->subtract(months => 1);
+rset('Statval')->search({
+    datetime => { '<' => schema->storage->datetime_parser->format_datetime($month) },
+})->delete;
+
 
 sub do_host
 {   my $host = shift;
