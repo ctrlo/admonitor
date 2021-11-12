@@ -1,0 +1,12 @@
+[Unit]
+Description=Admonitor - SSH login pickup
+After=mysql.service
+
+[Service]
+ExecStart=/srv/admonitor/bin/sshlogin-pickup.pl
+Restart=on-abort
+User=admonitor
+Group=admonitor
+
+[Install]
+WantedBy=multi-user.target

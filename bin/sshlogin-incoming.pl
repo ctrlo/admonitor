@@ -2,14 +2,36 @@
 use strict;
 use warnings;
 
-use FindBin;
-use lib "$FindBin::Bin/../lib";
-
 use DateTime;
-use Log::Report 'admonitor';
-use Mail::Message;
-use Dancer2;
-use Dancer2::Plugin::DBIC;
+use Log::Report     qw(admonitor);
+
+# Common modules
+use POSIX            qw/strftime/;
+use English          qw/$UID/;
+use Errno            qw/EEXIST/;
+use Fcntl            qw/:DEFAULT :mode/;
+use IO::File         ();
+
+=head1 NAME
+
+incoming - maildrop for SSH logins
+
+=head1 SYNOPSYS
+
+ incoming <message
+
+=head1 DESCRIPTION
+
+This script is used to collect incoming SSH logins.  The mailrobot will
+handle those message one after the other (when it runs as daemon
+and is looking at the same queue directory!)
+
+=cut
+
+# Auto-config
+# is HOME set when called from postfix? Probably not, but required by config.
+my $user   = $ENV{USER} ||= (getpwuid $UID )[0];
+my $home   = $ENV{HOME} ||= (getpwnam $user)[7];
 
 dispatcher SYSLOG => 'syslog',
     mode     => 'DEBUG',
@@ -17,51 +39,74 @@ dispatcher SYSLOG => 'syslog',
     identity => 'Admonitor',
     facility => 'local0';
 
-my $msg;
+# The incoming queue
+my $queue = "/var/lib/admonitor/sshlogin";
 
-try {
-    my $fromline = <STDIN>;
-    $msg = Mail::Message->read(\*STDIN);
+# Error messages can be sent back to senders, so don't put path information etc
+# in them
+-d $queue
+    or error "incoming queue does not exist";
 
-    # Accepted publickey for root from 81.187.7.168 port 59784 ssh2: RSA 52:92:3e:c0:6c:40:9a:5b:f5:c2:6c:d2:0d:50:02:63
-    # Accepted publickey for simple from 2001:41c8:51:71b:fcff:ff:fe00:41eb port 60182 ssh2: RSA SHA256:peMgY8E9Q4yjZvRYg2WLAwANTg4dSznotBiHqvnzyvY
-    $msg->body =~ /Accepted publickey for ([a-z0-9]+) from ([:\.0-9a-f]+) port.* (.*)$/;
-    my ($username, $ip, $fingerprint) = ($1, $2, $3);
+# Create a unique file for this message
+my $filename;
+my $now = DateTime->now->strftime("%Y%m%d-%T");
 
-    my $host = rset('Host')->search({ name => $msg->sender->host })->next;
-    if (!$host)
-    {
-        trace __x"Not logging SSH login for {host}", host => $msg->sender->host;
-        exit;
-    }
+# XXXX This is a bit messy, but how to do it better?
+# Need to ensure that the file name chosen is not already
+# in use as a .proc
+# I tried adding the following before the if defined statement, but for
+# an unknown reason it causes the "if defined $file" to return false:
+#
+#    if (-e "$filename.proc")
+#    {   $file->close;
+#        next UNIQUE;
+#    }
+#    last if defined $file;
+#
 
-    my $fp_rs = rset('Fingerprint')->search({
-        fingerprint => $fingerprint,
-    });
-    rset('SSHLogin')->create({
-        host_id     => $host->id,
-        username    => $username,
-        source_ip   => $ip,
-        datetime    => DateTime->now,
-        fingerprint => $fingerprint,
-    }) if !$fp_rs->count;
-    foreach my $user ($fp_rs->all)
-    {
-        rset('SSHLogin')->create({
-            host_id     => $host->id,
-            user_id     => $user->user_id,
-            username    => $username,
-            source_ip   => $ip,
-            datetime    => DateTime->now,
-            fingerprint => $fingerprint,
-        });
-    }
-};
+umask 0027; # Don't allow any user to see file as it's written
 
-if ($@)
-{
-    $@->reportFatal(is_fatal => 0) if $@;
-    my $error = __x"Failed to process {msg}", msg => $msg->string;
-    report {is_fatal => 0}, ERROR => $error;
-#    report {is_fatal=>0}, ERROR => "The username or password was not recognised";
+# Use the index director to ensure unique files. Empty files are created here
+# to "hold" the name, and deleted on completion.
+my $unique = '001';
+my $file;
+UNIQUE:
+for( ; ; $unique++ )
+{   $filename = "$now-$unique";
+
+    # O_EXCL not safe over NFS3, but that does not really hurt because
+    # usually only one mailrobot will be active.
+    $file = IO::File->new("$queue/$filename", O_RDWR|O_CREAT|O_EXCL); #, S_IWUSR|S_IRUSR);
+
+    last if defined $file;
+
+    my $rc    = $!;
+    next UNIQUE if $rc==EEXIST;
+
+    fault __x"Cannot create file {file} in queue", file => "$queue/$filename";
 }
+
+while(my $line = <STDIN> )
+{   $line =~ s/\r\n/\n/;     # remove optional CR
+    last if $line eq "\n";   # end of header?
+
+    $file->print($line);
+}
+
+while(my $line = <STDIN> )
+{   $line =~ s/\r\n/\n/;     # remove optional CR
+    $file->print($line);
+}
+
+$file->flush;
+if($file->error)
+{   unlink "$queue/$filename";
+    fault "errors while writing $file";
+}
+
+unless(chmod S_IRUSR|S_IRGRP, "$queue/$filename")
+{   unlink "$queue/$filename";
+    fault "cannot chmod $file";
+}
+
+$file->close;
