@@ -3,10 +3,11 @@ package Admonitor::Plugin::Agent::UFW;
 use strict;
 use warnings;
 
+use IPC::Run qw( run timeout );
+use Log::Report 'admonitor';
+
 use Moo;
 extends 'Admonitor::Plugin::Agent';
-
-our $check_command = q(sudo ufw status | head -1 | grep -q '^Status: active$');
 
 has stattypes => (
     is      => 'ro',
@@ -22,8 +23,13 @@ has stattypes => (
 );
 
 sub read {
-    system $check_command;
-    my $success = $? ? 0 : 1;
+
+    my ($in, $out, $err);
+    # Ensure timeout in case sudo hangs for a password
+    run [qw/sudo ufw status/], \$in, \$out, \$err, timeout(5)
+        or fault "Failed to run sudo command";
+
+    my $success = $out =~ /^Status: active$/m ? 1 : 0;
     return { enabled => $success };
 }
 
