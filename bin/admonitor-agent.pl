@@ -112,7 +112,7 @@ while (1) {
         say $client 'OK';
     }
     else {
-        say STDERR "Invalid password: $password";
+        say STDERR "Invalid password: $pw";
         next;
     }
 
