@@ -21,6 +21,7 @@ package Admonitor::Plugin::Agent::OpenDKIM;
 use strict;
 use warnings;
 
+use IO::Socket::UNIX;
 use Moo;
 
 extends 'Admonitor::Plugin::Agent';
@@ -40,7 +41,14 @@ has stattypes => (
 
 sub read
 {   my $self   = shift;
-    my $exists = -S "/var/run/opendkim/opendkim.sock" ? 1 : 0;
+
+    my $sock_path = "/var/run/opendkim/opendkim.sock";
+
+    my $exists = IO::Socket::UNIX->new(
+        Type => SOCK_STREAM(),
+        Peer => $sock_path,
+    );
+
     +{
         socket_exists => $exists,
     };
