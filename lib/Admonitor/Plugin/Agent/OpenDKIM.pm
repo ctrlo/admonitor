@@ -50,7 +50,7 @@ sub read
     );
 
     +{
-        socket_exists => $exists,
+        socket_exists => $exists ? 1 : 0,
     };
 }
 
