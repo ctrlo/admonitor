@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Config::Any;
+use Data::Dumper;
 use DBI;
 use IO::Socket::SSL;
 use Cpanel::JSON::XS;
@@ -73,11 +74,15 @@ threads->create(sub {
                 _execute($sth, $record_id, "Agent::Admonitor", 'error_message', encode_json { value => $error });
                 $e->reportFatal(is_fatal => 0);
             }
-            else {
+            elsif (ref $values eq 'HASH') {
                 foreach my $key (keys %$values)
                 {
                     _execute($sth, $record_id, "$agent", $key, encode_json { value => $values->{$key} });
                 }
+            }
+            else {
+                local $Data::Dumper::Indent = 0;
+                panic "Unexpected value received from $agent: ".Dumper($values);
             }
         }
         sleep ($config->{read_interval} || 300);
