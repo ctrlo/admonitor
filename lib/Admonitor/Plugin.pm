@@ -183,6 +183,8 @@ sub send_alarm
     my $hostname = $host->name;
     my $group = $host->group;
     my $body = "An alarm was received for host $hostname: $error";
+    my $from = Admonitor::Config->instance->config->{admonitor}->{mail_from}
+        or panic "Please configure mail_from in config file";
     foreach my $user_group ($group->user_groups)
     {
         my $this_body = $body;
@@ -193,10 +195,11 @@ sub send_alarm
             $this_body .= "\n\n" . __x($alarm_message->message_suffix, host => $hostname);
         }
         my $msg = Mail::Message->build(
+            From    => $from,
             To      => $user_group->user->email,
             Subject => "Admonitor alarm",
             data    => "$this_body",
-        )->send(via => 'sendmail');
+        )->send(via => 'sendmail', sendmail_options => [-f => $from]);
     }
     1; # Report that an alarm has been sent
 }

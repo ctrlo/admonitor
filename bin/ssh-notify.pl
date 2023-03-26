@@ -25,6 +25,7 @@ use feature 'say';
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 
+use Admonitor::Config;
 use Admonitor::Plugin;
 use Dancer2;
 use Dancer2::Plugin::DBIC;
@@ -33,6 +34,10 @@ use Mail::Message;
 use Net::IP;
 use Socket;
 use Net::DNS;
+
+Admonitor::Config->instance(
+    config => config,
+);
 
 my $res = Net::DNS::Resolver->new;
 
@@ -117,6 +122,9 @@ foreach my $login ($logins->all)
     }
 }
 
+my $from = Admonitor::Config->instance->config->{admonitor}->{mail_from}
+    or panic "Please configure mail_from in config file";
+
 foreach my $user_id (keys %$send)
 {
     my $user = rset('User')->find($user_id);
@@ -125,10 +133,11 @@ foreach my $user_id (keys %$send)
         : "This email contains all your recent SSH logins. If these are not correct please contact the ISMS Manager.\n\n";
     $msg .= join "\n", @{$send->{$user_id}};
     Mail::Message->build(
+        From    => $from,
         To      => $user->email,
         Subject => "SSH logins",
         data    => $msg,
-    )->send(via => 'sendmail');
+    )->send(via => 'sendmail', sendmail_options => [-f => $from]);
 }
 
 rset('SSHLogin')->delete;

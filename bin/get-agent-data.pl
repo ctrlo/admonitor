@@ -24,12 +24,18 @@ use warnings;
 use FindBin;
 use lib "$FindBin::Bin/../lib";
 
+use Admonitor::Config;
 use Log::Report 'admonitor';
 use Dancer2;
 use Dancer2::Plugin::DBIC;
 use IO::Socket::SSL;
 use IO::Socket::Timeout;
 use Errno qw(ETIMEDOUT EWOULDBLOCK);
+
+# Initiate singleton config class for use in other modules
+Admonitor::Config->instance(
+    config => config,
+);
 
 my @hosts = rset('Host')->search({ collect_agents => 1 })->all;
 
