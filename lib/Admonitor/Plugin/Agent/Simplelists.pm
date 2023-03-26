@@ -127,7 +127,8 @@ sub alarm
             if $total > $threshold;
         # age
         $threshold = $q->{age};
-        my $age = $data->{queues}->{$queue}->{age};
+        my $age = $data->{queues}->{$queue}->{age}
+            or next;
         $self->send_alarm("Files in queue $queue older than $threshold seconds (age $age)")
             if $age > $threshold;
     }
