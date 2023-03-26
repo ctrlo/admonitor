@@ -50,6 +50,8 @@ sub read
 
     my $config = $self->config;
     # GRANT REPLICATION CLIENT ON *.* TO 'repcheck'@'localhost' IDENTIFIED BY 'xxx';
+    # Later versions:
+    # GRANT SLAVE MONITOR ON *.* TO 'repcheck'@'localhost' IDENTIFIED BY 'xxx';
     my $dbh = DBI->connect($config->{dsn}, $config->{username}, $config->{password})
         or error $DBI::errstr;
 
