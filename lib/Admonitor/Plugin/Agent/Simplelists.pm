@@ -107,9 +107,10 @@ sub write
             value    => $value->{count},
         );
         $self->write_single(
-            stattype => 'queue_age',
-            param    => $queue,
-            value    => $value->{age},
+            stattype   => 'queue_age',
+            param      => $queue,
+            value      => $value->{age},
+            allow_null => 1,
         );
     }
 }
