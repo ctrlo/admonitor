@@ -78,7 +78,7 @@ sub read
         my $age;
         foreach my $message (glob "$dir/*")
         {
-            my $st = stat("$dir/$message") or next;
+            my $st = stat($message) or next;
             my $modified = $st->mtime or next;
             my $a = time - $modified;
             $age = $a
