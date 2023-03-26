@@ -13,7 +13,7 @@
 
 [% FOREACH plug IN plugins %]
     <h2>[% plug %]</h2>
-    <canvas id="chart[% plug %]" width="600" height="300"></canvas>
+    <canvas id="chart[% plug %]" width="1200" height="600"></canvas>
 [% END %]
 
 
