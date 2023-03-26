@@ -21,12 +21,34 @@ package Admonitor::Plugin::Agent::Simplelists;
 use strict;
 use warnings;
 
+use File::stat;
 use Log::Report 'admonitor';
 use Moo;
 
 extends 'Admonitor::Plugin::Agent';
 
-my @queues = qw(approve bounce incoming store);
+my @queues = (
+    {
+        name => 'approve',
+        size => 2,
+        age  => 1800,
+    },
+    {
+        name => 'bounce',
+        size => 10,
+        age  => 1800,
+    },
+    {
+        name => 'incoming',
+        size => 2,
+        age  => 300,
+    },
+    {
+        name => 'store',
+        size => 200,
+        age  => 3600,
+    },
+);
 
 has stattypes => (
     is      => 'ro',
@@ -37,6 +59,11 @@ has stattypes => (
                 type => 'decimal',
                 read => 'max',
             },
+            {
+                name => 'queue_age',
+                type => 'decimal',
+                read => 'max',
+            },
         ],
     },
 );
@@ -44,41 +71,64 @@ has stattypes => (
 sub read
 {   my $self   = shift;
     my $values;
-    foreach my $queue (@queues)
+    foreach my $q (@queues)
     {
-        $values->{$queue} = files_in_dir("/var/lib/simplelists/$queue");
+        my $queue = $q->{name};
+        my $dir = "/var/lib/simplelists/$queue";
+        my $age;
+        foreach my $message (glob "$dir/*")
+        {
+            my $st = stat("$dir/$message") or next;
+            my $modified = $st->mtime or next;
+            my $a = time - $modified;
+            $age = $a
+                if !$age || $a > $age;
+        }
+
+        $values->{$queue} = {
+            count => files_in_dir($dir),
+            age   => $age,
+        };
     }
     return +{
-        queue_count => $values,
+        queues => $values,
     };
 }
 
 sub write
 {   my ($self, $data) = @_;
-    foreach my $queue (@queues)
+    foreach my $q (@queues)
     {
-        my $value = $data->{queue_count}->{$queue};
+        my $queue = $q->{name};
+        my $value = $data->{queues}->{$queue};
         $self->write_single(
             stattype => 'queue_count',
             param    => $queue,
-            value    => $value,
+            value    => $value->{count},
+        );
+        $self->write_single(
+            stattype => 'queue_age',
+            param    => $queue,
+            value    => $value->{age},
         );
     }
 }
 
 sub alarm
 {   my ($self, $data) = @_;
-    my %threshold = (
-        approve  => $self->thresholds->{queue_count}->{$self->host_id} || 2,
-        incoming => $self->thresholds->{queue_count}->{$self->host_id} || 2,
-        store    => $self->thresholds->{queue_count}->{$self->host_id} || 100,
-    );
-    foreach my $queue (@queues)
+    foreach my $q (@queues)
     {
-        my $threshold = $threshold{$queue} || 10;
-        my $total     = $data->{queue_count}->{$queue};
+        my $queue     = $q->{name};
+        # size
+        my $threshold = $q->{size};
+        my $total     = $data->{queues}->{$queue}->{count};
         $self->send_alarm("More than $threshold files in queue $queue (total $total)")
             if $total > $threshold;
+        # age
+        $threshold = $q->{age};
+        my $age = $data->{queues}->{$queue}->{age};
+        $self->send_alarm("Files in queue $queue older than $threshold seconds (age $age)")
+            if $age > $threshold;
     }
 }
 
