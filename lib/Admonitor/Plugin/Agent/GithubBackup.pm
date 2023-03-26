@@ -45,7 +45,8 @@ sub read
     # Get modified time of first repo in directory
     my $dir = "/var/backups/github/";
     # Return nothing if any failures, which will cause alarm
-    opendir(DIR, $dir) or return;
+    opendir(DIR, $dir)
+        or return { backup_time => undef };
     my $modified;
     while (my $file = readdir(DIR))
     {
