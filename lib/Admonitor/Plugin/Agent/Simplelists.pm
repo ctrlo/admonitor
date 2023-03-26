@@ -135,7 +135,7 @@ sub alarm
 sub files_in_dir
 {   my $dir = shift;
     opendir my $dh, $dir or fault "failed to open dir '$dir'";
-    grep { -d "$dir/$_" && /^[^\.]+/ } readdir $dh;
+    scalar grep { -d "$dir/$_" && /^[^\.]+/ } readdir $dh;
 }
 
 1;
