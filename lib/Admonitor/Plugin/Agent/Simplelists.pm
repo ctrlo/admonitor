@@ -40,7 +40,7 @@ my @queues = (
     },
     {
         name => 'incoming',
-        size => 2,
+        size => 10,
         age  => 300,
     },
     {
