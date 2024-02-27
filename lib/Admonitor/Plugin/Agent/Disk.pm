@@ -67,11 +67,13 @@ sub alarm
 {   my ($self, $data) = @_;
     my $usage = $data->{diskusage};
     my $sent;
+    my $limit = $self->thresholds->{usageper}->{$self->host_id}
+        // 75;
     foreach my $disk (keys %$usage)
     {
         my $value = $usage->{$disk}->{usageper};
-        $sent ||= $self->send_alarm("Disk space usage for $disk greater than 75% ($value%)")
-            if $value && $value > 75;
+        $sent ||= $self->send_alarm("Disk space usage for $disk greater than $limit% ($value%)")
+            if $value && $value > $limit;
     }
     return $sent; # Return whether alarm has been sent to prevent duplicates
 }
