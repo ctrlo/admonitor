@@ -21,7 +21,7 @@ package Admonitor::Plugin::Checker;
 use Admonitor::Config;
 use DateTime;
 use Moo;
-use MooX::Types::MooseLike::Base qw/ArrayRef/;
+use MooX::Types::MooseLike::Base qw/ArrayRef Int/;
 
 extends 'Admonitor::Plugin';
 
@@ -44,6 +44,12 @@ sub _build_config
 has loop => (
     is       => 'ro',
     required => 1,
+);
+
+has first_interval => (
+    is      => 'ro',
+    isa     => Int,
+    default => 0,
 );
 
 has _notifiers => (

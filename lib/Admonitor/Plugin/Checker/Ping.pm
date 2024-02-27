@@ -91,8 +91,9 @@ sub _build_timers
     foreach my $host (@{$self->hosts})
     {
         $timers->{$host->id} = IO::Async::Timer::Periodic->new(
-            interval => 1,
-            on_tick  => sub {
+            interval       => 1,
+            first_interval => $self->first_interval,
+            on_tick        => sub {
                 $timers->{$host->id}->adopt_future(
                     $self->io_object->ping($host->name)
                         ->on_done(sub {
