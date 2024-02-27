@@ -77,5 +77,9 @@ sub _run
     );
     $timer->start;
     $loop->add( $timer );
-    $loop->run;
+    try { $loop->run };
+    my $e = $@;
+    $_->remove_all_notifiers foreach @{$checkers->all};
+    $loop->remove($timer);
+    $e->reportAll;
 }

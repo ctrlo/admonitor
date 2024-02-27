@@ -46,6 +46,32 @@ has loop => (
     required => 1,
 );
 
+has _notifiers => (
+    is      => 'ro',
+    default => sub { +{} },
+);
+
+sub add_notifier
+{   my ($self, $notifier) = @_;
+    $self->_notifiers->{"$notifier"} = $notifier;
+    $self->loop->add($notifier);
+}
+
+sub remove_notifier
+{   my ($self, $notifier) = @_;
+    $self->loop->remove($notifier);
+    delete $self->_notifiers->{"$notifier"};
+}
+
+sub remove_all_notifiers
+{   my $self = shift;
+    foreach my $notifier (keys %{$self->_notifiers})
+    {
+        $self->loop->remove($self->_notifiers->{$notifier});
+        delete $self->_notifiers->{$notifier};
+    }
+}
+
 has hosts => (
     is  => 'lazy',
     isa => ArrayRef,
@@ -74,9 +100,9 @@ sub start
     {
         my $timer = $self->timers->{$_->id};
         $timer->start;
-        $self->loop->add($timer);
+        $self->add_notifier($timer);
     }
-    $self->loop->add( $self->io_object );
+    $self->add_notifier($self->io_object);
 }
 
 1;
