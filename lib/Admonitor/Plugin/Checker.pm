@@ -102,7 +102,10 @@ sub start
         $timer->start;
         $self->add_notifier($timer);
     }
-    $self->add_notifier($self->io_object);
+    my $notifier = $self->io_object;
+    # Do not need to add if it is another event object, such as EV
+    $self->add_notifier($notifier)
+        if $notifier->isa("IO::Async::Notifier");
 }
 
 1;
