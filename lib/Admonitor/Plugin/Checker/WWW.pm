@@ -30,6 +30,7 @@ use IO::Async::Timer::Periodic;
 use Log::Report 'admonitor';
 use Net::Async::HTTP;
 use Math::NumberCruncher;
+use Scalar::Util qw(weaken);
 
 has stattypes => (
     is      => 'ro',
@@ -89,6 +90,7 @@ has timers => (
 
 sub _build_timers
 {   my $self = shift;
+    weaken $self;
     my $timers = {};
     foreach my $host (@{$self->hosts})
     {

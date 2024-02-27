@@ -29,6 +29,7 @@ extends 'Admonitor::Plugin::Checker';
 use IO::Async::Timer::Periodic;
 use Net::Async::Ping;
 use Math::NumberCruncher;
+use Scalar::Util qw(weaken);
 
 has stattypes => (
     is      => 'ro',
@@ -85,6 +86,7 @@ has timers => (
 
 sub _build_timers
 {   my $self = shift;
+    weaken $self;
     my $timers = {};
     foreach my $host (@{$self->hosts})
     {
