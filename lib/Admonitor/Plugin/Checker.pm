@@ -20,6 +20,7 @@ package Admonitor::Plugin::Checker;
 
 use Admonitor::Config;
 use DateTime;
+use Log::Report;
 use Moo;
 use MooX::Types::MooseLike::Base qw/ArrayRef Int/;
 
