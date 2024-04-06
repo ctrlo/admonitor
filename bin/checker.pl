@@ -77,7 +77,8 @@ sub _run
     );
     $timer->start;
     $loop->add( $timer );
-    try { $loop->run };
+    # See logging comments above
+    try { $loop->run } accept => 'ERROR,FAULT,FAILURE,PANIC', on_die => 'PANIC';
     my $e = $@;
     $_->remove_all_notifiers foreach @{$checkers->all};
     $loop->remove($timer);
