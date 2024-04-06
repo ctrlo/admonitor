@@ -31,6 +31,7 @@ use Log::Report 'admonitor';
 use Net::Async::HTTP;
 use Math::NumberCruncher;
 use Scalar::Util qw(weaken);
+use Net::SSLeay 1.88 # Contains memory leak fix;
 
 has stattypes => (
     is      => 'ro',
