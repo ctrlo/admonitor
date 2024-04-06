@@ -86,11 +86,13 @@ has hosts => (
 
 sub _build_hosts
 {   my $self = shift;
-    my $search = $self->config->{all_hosts} ? {} : { 'host_checkers.name' => $self->name };
-    my @hosts = $self->schema->resultset('Host')->search($search,{
+    my $rs = $self->schema->resultset('Host');
+    $rs = $rs->search({
+        'host_checkers.name' => $self->name,
+    },{
         join => 'host_checkers'
-    })->all;
-    [@hosts];
+    }) unless $self->config->{all_hosts};
+    [$rs->all];
 }
 
 # Used in Agents for the datetime of each datum. For checkers, we
