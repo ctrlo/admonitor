@@ -25,6 +25,7 @@ use FindBin;
 use lib "$FindBin::Bin/../lib";
 
 use Admonitor::Config;
+use DateTime;
 use Log::Report 'admonitor';
 use Dancer2;
 use Dancer2::Plugin::DBIC;
