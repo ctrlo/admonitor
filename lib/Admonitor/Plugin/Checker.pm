@@ -92,7 +92,10 @@ sub _build_hosts
     },{
         join => 'host_checkers'
     }) unless $self->config->{all_hosts};
-    [$rs->all];
+    my @hosts = $rs->all
+        or error __x"No hosts defined for {plugin}. If this is intentional please remove from config",
+            plugin => $self->name;
+    \@hosts;
 }
 
 # Used in Agents for the datetime of each datum. For checkers, we
