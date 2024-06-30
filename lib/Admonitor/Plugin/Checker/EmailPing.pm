@@ -201,6 +201,7 @@ sub _build_timers
                 my $msgtext  = $msg->string;
                 my ($sender) = $msg->sender;
                 my ($to)     = $msg->to;
+                my $msgid    = $msg->messageId;
                 my $smtp     = $self->_get_smtp($host);
                 $timer->adopt_future(
                     $smtp->connected
@@ -209,9 +210,11 @@ sub _build_timers
                         })
                         ->on_done(sub {
                             my $response = shift;
-                            trace __x"Sent token message to host {host}", host => $host->name;
+                            trace __x"Sent token message to host {host} with msgid {msgid}",
+                                host => $host->name, msgid => $msgid;
                             $self->results->{$host->id}->{$token} = {
-                                sent => time,
+                                sent  => time,
+                                msgid => $msgid,
                             };
                         })
                         ->on_fail(sub {
@@ -219,8 +222,8 @@ sub _build_timers
                             # context. See calls to fail() in Protocol::SMTP::Client
                             # So print everything:
                             my $error = join '; ', @_;
-                            warning __x"Failed to send email to host {host}: {error}",
-                                host => $host->name, error => $error;
+                            warning __x"Failed to send email {msgid} to host {host}: {error}",
+                                msgid => $msgid, host => $host->name, error => $error;
                             $self->failcount->{$host->id}++;
                         #})->then_with_f(sub {
                         })->on_ready(sub {
@@ -264,14 +267,22 @@ sub write
             if ($received_time)
             {
                 # In time?
-                push @times, $received_time - $sent_time;
+                my $seconds = $received_time - $sent_time;
+                $seconds < $alarm_seconds
+                    or warning __x"Message {msgid} for {host} was late",
+                        msgid => $msg->{msgid}, host => $host->name;
+                push @times, $seconds;
                 delete $self->results->{$host->id}->{$token};
             }
             else {
                 # Overdue? Count as a failure if so
                 my $delay = DateTime->now->epoch - $sent_time;
-                $failcount++
-                    if $delay > $alarm_seconds;
+                if ($delay > $alarm_seconds)
+                {
+                    warning __x"Message {msgid} for {host} not yet received",
+                        msgid => $msg->{msgid}, host => $host->name;
+                    $failcount++;
+                }
             }
         }
 
