@@ -58,10 +58,25 @@ has io_object => (
 
 my $mbox = "/var/lib/admonitor/email_ping/incoming";
 
-my $sender = $self->config->{sender}
-    or panic "Sending email address needs to be defined";
-my $recipient = $self->config->{recipient}
-    or panic "Recipient email address needs to be defined";
+has email_sender => (
+    is => 'lazy',
+);
+
+sub _build_email_sender
+{   my $self = shift;
+    $self->config->{sender}
+        or panic "Sending email address needs to be defined";
+}
+
+has email_recipient => (
+    is => 'lazy',
+);
+
+sub _build_email_recipient
+{   my $slef = shift;
+    $self->config->{recipient}
+        or panic "Recipient email address needs to be defined";
+}
 
 sub _build_io_object
 {   my $that = shift;
@@ -178,8 +193,8 @@ sub _build_timers
                 my $host_id = $host->id;
                 my $token = Session::Token->new(length => 32)->get;
                 my $msg = Mail::Message->build(
-                    To             => $recipient,
-                    From           => $sender,
+                    To             => $self->email_recipient,
+                    From           => $self->email_sender,
                     Subject        => "Admonitor test",
                     data           => "$host_id TOKEN $token",
                 );
