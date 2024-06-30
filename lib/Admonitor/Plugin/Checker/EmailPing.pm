@@ -73,7 +73,7 @@ has email_recipient => (
 );
 
 sub _build_email_recipient
-{   my $slef = shift;
+{   my $self = shift;
     $self->config->{recipient}
         or panic "Recipient email address needs to be defined";
 }
