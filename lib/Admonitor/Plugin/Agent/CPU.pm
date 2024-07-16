@@ -57,4 +57,12 @@ sub write
     );
 }
 
+sub alarm
+{   my ($self, $data) = @_;
+    my $use = $data->{loadavg}->{avg_15};
+    my $limit = 25;
+    $self->send_alarm("CPU usage greater than $limit% ($use%)")
+        if $use && $use > $limit;
+}
+
 1;
