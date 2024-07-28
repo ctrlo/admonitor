@@ -31,7 +31,7 @@ has stattypes => (
     default => sub {
         [
             {
-                name => 'avg_15',
+                name => 'total',
                 type => 'decimal',
                 read => 'max',
             },
@@ -41,26 +41,28 @@ has stattypes => (
 
 sub read
 {   my $self = shift;
-    my $lxs = Sys::Statistics::Linux->new(loadavg => 1);
+    my $lxs = Sys::Statistics::Linux->new(cpustats => 1);
+    sleep 1; # For useful stats, as per pod
     my $stat = $lxs->get;
-    my $load = $stat->loadavg; # Force hashref return
+    # Average across all CPUs
+    my $total = $stat->cpustats->{cpu}->{total};
     {
-        loadavg => $load,
+        total => $total,
     };
 }
 
 sub write
 {   my ($self, $data) = @_;
     $self->write_single(
-        stattype => 'avg_15',
-        value    => $data->{loadavg}->{avg_15},
+        stattype => 'total',
+        value    => $data->{total},
     );
 }
 
 sub alarm
 {   my ($self, $data) = @_;
-    my $use = $data->{loadavg}->{avg_15};
-    my $limit = 25;
+    my $use = $data->{total};
+    my $limit = 50;
     $self->send_alarm("CPU usage greater than $limit% ($use%)")
         if $use && $use > $limit;
 }
