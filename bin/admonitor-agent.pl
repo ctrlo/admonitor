@@ -62,7 +62,7 @@ threads->create(sub {
         my $sth  = $dbh->prepare("INSERT INTO records (retrieved) VALUES (0)");
         _execute($sth);
         my $record_id = $dbh->func('last_insert_rowid');
-        $sth  = $dbh->prepare(qq/INSERT INTO "values" (record_id, plugin, value) VALUES (?,?,?,?)/);
+        $sth  = $dbh->prepare(qq/INSERT INTO "values" (record_id, plugin, value) VALUES (?,?,?)/);
         foreach my $agent (@agents)
         {
             my $values;
