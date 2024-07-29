@@ -78,9 +78,9 @@ sub read
 sub write
 {   my ($self, $data) = @_;
     $self->write_single(
-        stattype => $_,
-        value    => $data->{$_},
-    ) foreach qw/user nice system iowait total/;
+        stattype => $_->{name},
+        value    => $data->{$_->{name}},
+    ) foreach @{$self->stattypes};
 }
 
 sub alarm
