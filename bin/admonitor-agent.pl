@@ -75,10 +75,7 @@ threads->create(sub {
                 $e->reportFatal(is_fatal => 0);
             }
             elsif (ref $values eq 'HASH') {
-                foreach my $key (keys %$values)
-                {
-                    _execute($sth, $record_id, "$agent", $key, encode_json { value => $values->{$key} });
-                }
+                _execute($sth, $record_id, "$agent", $key, encode_json $values);
             }
             else {
                 local $Data::Dumper::Indent = 0;
@@ -136,7 +133,7 @@ while (1) {
             push @stats, {
                 datetime => $row->{datetime},
                 $values->{plugin} => {
-                    $values->{key} => decode_json($values->{value})->{value},
+                    $values->{key} => decode_json($values->{value}),
                 },
             };
         }
