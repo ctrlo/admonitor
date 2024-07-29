@@ -62,7 +62,7 @@ threads->create(sub {
         my $sth  = $dbh->prepare("INSERT INTO records (retrieved) VALUES (0)");
         _execute($sth);
         my $record_id = $dbh->func('last_insert_rowid');
-        $sth  = $dbh->prepare(qq/INSERT INTO "values" (record_id, plugin, key, value) VALUES (?,?,?,?)/);
+        $sth  = $dbh->prepare(qq/INSERT INTO "values" (record_id, plugin, value) VALUES (?,?,?,?)/);
         foreach my $agent (@agents)
         {
             my $values;
@@ -75,7 +75,7 @@ threads->create(sub {
                 $e->reportFatal(is_fatal => 0);
             }
             elsif (ref $values eq 'HASH') {
-                _execute($sth, $record_id, "$agent", $key, encode_json $values);
+                _execute($sth, $record_id, "$agent", encode_json $values);
             }
             else {
                 local $Data::Dumper::Indent = 0;
@@ -132,9 +132,7 @@ while (1) {
             $datemax = $row->{datetime};
             push @stats, {
                 datetime => $row->{datetime},
-                $values->{plugin} => {
-                    $values->{key} => decode_json($values->{value}),
-                },
+                $values->{plugin} => decode_json($values->{value}),
             };
         }
     }
