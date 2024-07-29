@@ -31,6 +31,26 @@ has stattypes => (
     default => sub {
         [
             {
+                name => 'user',
+                type => 'decimal',
+                read => 'max',
+            },
+            {
+                name => 'nice',
+                type => 'decimal',
+                read => 'max',
+            },
+            {
+                name => 'system',
+                type => 'decimal',
+                read => 'max',
+            },
+            {
+                name => 'iowait',
+                type => 'decimal',
+                read => 'max',
+            },
+            {
                 name => 'total',
                 type => 'decimal',
                 read => 'max',
@@ -45,25 +65,29 @@ sub read
     sleep 1; # For useful stats, as per pod
     my $stat = $lxs->get;
     # Average across all CPUs
-    my $total = $stat->cpustats->{cpu}->{total};
+    my $cpu = $stat->cpustats->{cpu};
     {
-        total => $total,
+        user   => $cpu->{user},
+        nice   => $cpu->{nice},
+        system => $cpu->{system},
+        iowait => $cpu->{iowait},
+        total  => $cpu->{total},
     };
 }
 
 sub write
 {   my ($self, $data) = @_;
     $self->write_single(
-        stattype => 'total',
-        value    => $data->{total},
-    );
+        stattype => $_,
+        value    => $data->{$_},
+    ) foreach qw/user nice system iowait total/;
 }
 
 sub alarm
 {   my ($self, $data) = @_;
-    my $use = $data->{total};
+    my $use = $data->{user};
     my $limit = 50;
-    $self->send_alarm("CPU usage greater than $limit% ($use%)")
+    $self->send_alarm("User process CPU usage greater than $limit% ($use%)")
         if $use && $use > $limit;
 }
 
