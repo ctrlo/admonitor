@@ -59,6 +59,7 @@ threads->create(sub {
     } @agents_config;
     while (1)
     {
+        my $start = time;
         my $sth  = $dbh->prepare("INSERT INTO records (retrieved) VALUES (0)");
         _execute($sth);
         my $record_id = $dbh->func('last_insert_rowid');
@@ -82,7 +83,11 @@ threads->create(sub {
                 panic "Unexpected value received from $agent: ".Dumper($values);
             }
         }
-        sleep ($config->{read_interval} || 300);
+        while (1)
+        {
+            sleep 1;
+            last if time > $start + ($config->{read_interval} || 300);
+        }
     }
 });
 
