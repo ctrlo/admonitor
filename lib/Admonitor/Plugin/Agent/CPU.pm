@@ -62,7 +62,7 @@ has stattypes => (
 sub read
 {   my $self = shift;
     my $lxs = Sys::Statistics::Linux->new(cpustats => 1);
-    sleep 1; # For useful stats, as per pod
+    sleep 4; # For useful stats, as per pod
     my $stat = $lxs->get;
     # Average across all CPUs
     my $cpu = $stat->cpustats->{cpu};
@@ -86,7 +86,7 @@ sub write
 sub alarm
 {   my ($self, $data) = @_;
     my $use = $data->{user};
-    my $limit = 50;
+    my $limit = 75;
     $self->send_alarm("User process CPU usage greater than $limit% ($use%)")
         if $use && $use > $limit;
 }
