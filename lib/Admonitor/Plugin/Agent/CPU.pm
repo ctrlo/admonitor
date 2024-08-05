@@ -86,7 +86,7 @@ sub write
 sub alarm
 {   my ($self, $data) = @_;
     my $use = $data->{user};
-    my $limit = 75;
+    my $limit = 95;
     $self->send_alarm("User process CPU usage greater than $limit% ($use%)")
         if $use && $use > $limit;
 }
