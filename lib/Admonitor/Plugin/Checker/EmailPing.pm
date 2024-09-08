@@ -48,6 +48,11 @@ has stattypes => (
                 type => 'decimal',
                 read => 'max',
             },
+            {
+                name => 'received_count',
+                type => 'decimal',
+                read => 'max',
+            },
         ],
     },
 );
@@ -254,7 +259,7 @@ sub write
             next;
         }
 
-        my $failcount;
+        my $received_count = 0; # Needs to be defined for writing to DB, even if none
 
         # First process tokens that have been successfully sent
         my @times;
@@ -273,39 +278,39 @@ sub write
                         msgid => $msg->{msgid}, host => $host->name;
                 push @times, $seconds;
                 delete $self->results->{$host->id}->{$token};
+                $received_count++;
             }
             else {
-                # Overdue? Count as a failure if so
                 my $delay = DateTime->now->epoch - $sent_time;
                 if ($delay > $alarm_seconds)
                 {
                     warning __x"Message {msgid} for {host} not yet received",
                         msgid => $msg->{msgid}, host => $host->name;
-                    $failcount++;
                 }
             }
         }
 
-        # Now any problems with the sending
-        $failcount += $self->failcount->{$host->id};
-
         $self->host_id($host->id);
 
-        # Check delays
+        # Check delays. $avg written as undef later if none received
         my $avg = int Math::NumberCruncher::Mean(\@times);
         $self->send_alarm("Email delivery took $avg seconds")
             if $avg > $alarm_seconds;
 
         # Check complete failures
-        my $failavg = int (($failcount / $total_sent) * 100);
-        $self->send_alarm("Email delivery failures higher than 25% ($failavg%)")
-            if $failavg > 25;
+        my $success_avg = int (($received_count / $total_sent) * 100);
+        $self->send_alarm("Successful email deliveries less than 75% ($success_avg%)")
+            if $success_avg <= 75;
 
         $self->write_single(
             stattype   => 'delay',
-            value      => $avg, # Can be undef if none received successfully
-            failcount  => $failcount,
+            value      => @times ? $avg : undef, # Can be undef if none received successfully
+            failcount  => $self->failcount->{$host->id},
             allow_null => 1,
+        );
+        $self->write_single(
+            stattype   => 'received_count',
+            value      => $received_count,
         );
 
         $self->failcount->{$host->id} = 0;
