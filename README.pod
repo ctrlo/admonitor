@@ -172,6 +172,10 @@ example, to collect the data every 15 minutes:
 This will contact each host, collect the statistics, and save to the database
 on the controller.
 
+Also add an alias for the admonitor user for reporting any errors with the cron:
+
+  admonitor: root
+
 =head3 Setup SSH login notifications
 
 Optionally also add a cron for SSH login notifications:
