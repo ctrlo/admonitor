@@ -22,6 +22,8 @@ template: "template_toolkit"
 
 session: "YAML"
 
+logger: LogReport
+
 engines:
   session:
     YAML:
