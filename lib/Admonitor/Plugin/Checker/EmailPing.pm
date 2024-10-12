@@ -179,7 +179,13 @@ has timers => (
 
 sub _get_smtp
 {   my ($self, $host) = @_;
-    my $smtp = Net::Async::SMTP::Client->new(host => $host->name);
+    my $smtp = Net::Async::SMTP::Client->new(
+        host          => $host->name,
+        SSL_cert_file => $self->config->{SSL_cert_file},
+        SSL_key_file  => $self->config->{SSL_key_file},
+        # Needed for SSL verification to occur, otherwise IP address is used
+        SSL_hostname  => $host->name,
+    );
     $self->add_notifier($smtp);
     $smtp;
 }
