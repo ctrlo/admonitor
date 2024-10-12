@@ -46,7 +46,15 @@ admonitor:
         enabled: 1
       Disk:
         enabled: 1
+      GithubBackup:
+        enabled: 0
       OpenDKIM:
+        enabled: 0
+      OpenARC:
+        enabled: 0
+      OpenDMARC:
+        enabled: 0
+      pySPF:
         enabled: 0
       Spamd:
         enabled: 0
@@ -64,6 +72,12 @@ admonitor:
         all_hosts: 1
       WWW:
         enabled: 1
+      EmailPing:
+        enabled: 0
+        sender: admonitor@example.com
+        recipient: admonitor@example.com
+        SSL_cert_file: /etc/ssl/certs/example.com.pem
+        SSL_key_file: /etc/ssl/private/example.com.key
 
 plugins:
   DBIC:
