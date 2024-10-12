@@ -167,10 +167,42 @@ but at the moment it is a cron job that runs periodically.
 Create an admonitor user, and add a cron job for the get-agent-data script. For
 example, to collect the data every 15 minutes:
 
-  5,20,35,55 * * * * /srv/admonitor/bin/get-agent-data.pl
+  5,20,35,55 * * * * DANCER_ENVIRONMENT=production /srv/admonitor/bin/get-agent-data.pl
 
 This will contact each host, collect the statistics, and save to the database
 on the controller.
+
+=head3 Setup SSH login notifications
+
+Optionally also add a cron for SSH login notifications:
+
+  0 0,12 * * * DANCER_ENVIRONMENT=production /srv/admonitor/bin/ssh-notify.pl
+
+Add the required Postfix alias:
+
+  sshlogin: "|nice /srv/admonitor/bin/sshlogin-incoming.pl"
+
+Create queue:
+
+  mkdir /var/lib/admonitor/sshlogin/
+  chown -R admonitor /var/lib/admonitor/
+
+=head2 Specific agents
+
+=head3 Checker::EmailPing
+
+Create required alias:
+
+  simplelists:    /var/lib/admonitor/email_ping/incoming/
+
+Update postfix/main.cf with:
+
+  default_privs = admonitor
+
+Create Maildir:
+
+  mkdir -p /var/lib/admonitor/email_ping/incoming/
+  chown -R admonitor /var/lib/admonitor/email_ping/
 
 =head1 Conclusion
 
