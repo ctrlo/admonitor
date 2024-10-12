@@ -40,30 +40,30 @@ admonitor:
     agents:
       Admonitor:
         enabled: 1
-      Memory:
-        enabled: 1
       CPU:
         enabled: 1
       Disk:
         enabled: 1
+      Duplicity:
+        enabled: 1
       GithubBackup:
         enabled: 0
-      OpenDKIM:
-        enabled: 0
+      Memory:
+        enabled: 1
+      MySQLReplication:
+        enabled: 1
       OpenARC:
+        enabled: 0
+      OpenDKIM:
         enabled: 0
       OpenDMARC:
         enabled: 0
       pySPF:
         enabled: 0
-      Spamd:
-        enabled: 0
       Simplelists:
         enabled: 0
-      Duplicity:
-        enabled: 1
-      MySQLReplication:
-        enabled: 1
+      Spamd:
+        enabled: 0
       UFW:
         enabled: 1
     checkers:
