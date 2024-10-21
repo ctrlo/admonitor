@@ -72,7 +72,7 @@ threads->create(sub {
             {
                 my $e = $@;
                 my $error = "$agent failed: ".$e->wasFatal->message->toString;
-                _execute($sth, $record_id, "Agent::Admonitor", 'error_message', encode_json { value => $error });
+                _execute($sth, $record_id, "Agent::Admonitor", encode_json { error_message => $error });
                 $e->reportFatal(is_fatal => 0);
             }
             elsif (ref $values eq 'HASH') {
