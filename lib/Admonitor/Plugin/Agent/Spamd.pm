@@ -43,8 +43,14 @@ has stattypes => (
 sub read
 {   my $self   = shift;
     my $t = Net::Telnet->new();
-    try { $t->open(Host => 'localhost', Port => 783, Timeout => 10) };
-    my $exists = $@ ? 0 : 1;
+    # If try block fails, $exists remains 0
+    my $exists = 0;
+    try {
+        $t->open(Host => 'localhost', Port => 783, Timeout => 10);
+        $t->put("PING SPAMC/1.2\r\n");
+        my $data = $t->get;
+        $exists = 1 if $data =~ /PONG/;
+    };
     +{
         socket_exists => $exists,
     };
