@@ -47,7 +47,7 @@ sub read
     my $exists = 0;
     try {
         $t->open(Host => 'localhost', Port => 783, Timeout => 10);
-        $t->put("PING SPAMC/1.2\r\n");
+        $t->print("PING SPAMC/1.2");
         my $data = $t->get;
         $exists = 1 if $data =~ /PONG/;
     };
