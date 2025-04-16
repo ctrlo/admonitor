@@ -61,15 +61,16 @@ sub write
 {   my ($self, $data) = @_;
     my $value = $data->{backup_status};
     $self->write_single(
-        stattype => 'backup_status',
-        value    => $value,
+        stattype   => 'backup_status',
+        value      => $value,
+        allow_null => 1,
     );
 }
 
 sub alarm
 {   my ($self, $data) = @_;
     my $status = $data->{backup_status};
-    $self->send_alarm("No backup verification information")
+    return $self->send_alarm("No backup verification information")
         if !$status;
     my $parsed = $self->parse_backup_status($status);
     return $self->send_alarm("Backup verification failed: $status")
@@ -81,6 +82,8 @@ sub alarm
 
 sub parse_backup_status
 {   my ($self, $status) = @_;
+
+    $status or return;
 
     if ($status =~ m!^File (.*) retrieved at (.*) with differences(.*)and /root/testfile (differ|are identical)\s?$!s)
     {
