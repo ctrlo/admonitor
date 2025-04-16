@@ -22,6 +22,7 @@ use strict;
 use warnings;
 
 use DateTime;
+use Log::Report 'admonitor';
 use Moo;
 use File::Slurp qw/read_file/;
 
@@ -44,11 +45,15 @@ has stattypes => (
 );
 
 sub read
-{   my $self   = shift;
+{   my $self = shift;
     my $file = "/etc/duplicity/verify";
-    return undef if ! -f $file;
+    warning "Duplicity verification file does not exist"
+        if ! -f $file;
+    warning "Duplicity verification file not readable"
+        if ! -r $file;
+    my $contents = -r $file ? read_file($file) : undef;
     +{
-        backup_status => scalar read_file($file),
+        backup_status => $contents,
     };
 }
 
