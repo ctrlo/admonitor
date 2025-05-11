@@ -56,7 +56,7 @@ sub write
 sub alarm
 {   my ($self, $data) = @_;
     my $realusedper = realusedper($data->{realfreeper});
-    my $limit = $self->thresholds->{maximum_use_percentage}->{$self->host_id}
+    my $limit = $self->thresholds->{realusedper}->{$self->host_id}
         // 80;
     $self->send_alarm("Real used memory greater than $limit% ($realusedper%)")
         if $realusedper && $realusedper > $limit;
