@@ -118,5 +118,6 @@ sub _run
     my $e = $@;
     $_->remove_all_notifiers foreach @{$checkers->all};
     $loop->remove($timer);
+    $loop->remove($server);
     $e->reportAll;
 }
