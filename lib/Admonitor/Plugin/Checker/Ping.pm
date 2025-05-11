@@ -133,8 +133,10 @@ sub write
         if (my $sent = @{$self->results->{$host->id}} + $failcount)
         {
             my $failavg = int (($failcount / $sent) * 100);
+            my $limit = $self->thresholds->{fail_percent}->{$self->host_id}
+                // 20;
             $self->send_alarm("Ping failure higher than 20% ($failavg%)")
-                if $failavg > 20;
+                if $failavg > $limit;
         }
         $self->failcount->{$host->id} = 0;
         $self->results->{$host->id} = [];
