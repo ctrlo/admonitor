@@ -27,10 +27,12 @@ use lib "$FindBin::Bin/../lib";
 use Log::Report 'admonitor';
 use Dancer2;
 use Dancer2::Plugin::DBIC;
+use IO::Async::Listener;
 use IO::Async::Timer::Periodic;
 use Net::SSLeay 1.83; # Fixes memory leak
 use Admonitor::Config;
 use Admonitor::Plugin::Checkers;
+use Socket qw/IPPROTO_TCP/;
 
 dispatcher SYSLOG => 'syslog',
     mode     => 'DEBUG',
@@ -65,6 +67,40 @@ sub _run
     {
         $checker->start;
     }
+
+    # Set up a socket for other admonitor servers to ping and check that this
+    # admonitor checker process is alive
+    my $server = IO::Async::Listener->new(
+        on_stream => sub {
+            my (undef, $stream) = @_;
+            $stream->configure(
+                on_read => sub {
+                    my ($self, $buffref, $eof) = @_;
+                    my $received = $$buffref;
+                    $received =~ /ping/i
+                        or return;
+                    $self->write("Pong\n",
+                        on_error => sub {
+                            my ($self, $errno) = @_;
+                            warning "Failed to write pong: {err}", err => $errno;
+                        },
+                    );
+                    $$buffref = "";
+                    return 0;
+                },
+            );
+            $loop->add($stream);
+       },
+    );
+
+    $loop->add($server);
+
+    $server->listen(addr => {
+        family   => 'inet',
+        socktype => 'stream',
+        protocol => IPPROTO_TCP,
+        port     => 9098,
+    })->get;
 
     my $timer = IO::Async::Timer::Periodic->new(
         interval => 300,
