@@ -187,18 +187,22 @@ sub send_alarm
     my $body = "An alarm was received for host $hostname: $error";
     my $from = Admonitor::Config->instance->config->{admonitor}->{mail_from}
         or panic "Please configure mail_from in config file";
-    foreach my $user_group ($group->user_groups)
+    my @users = $group ? (map $_->user, $group->user_groups) : $self->schema->resultset('User')->active->all;
+    foreach my $user (@users)
     {
         my $this_body = $body;
-        my $alarm_message = $self->schema->resultset('AlarmMessage')->find(
-            { group_id => $group->id, plugin => $self->name }
+        my $alarm_message = $self->schema->resultset('AlarmMessage')->search(
+            { plugin => $self->name }
         );
-        if ( defined $alarm_message ) {
-            $this_body .= "\n\n" . __x($alarm_message->message_suffix, host => $hostname);
+        $alarm_message = $alarm_message->search({ group_id => $group->id })
+            if $group;
+        if (my $message = $alarm_message->next)
+        {
+            $this_body .= "\n\n" . __x($message->message_suffix, host => $hostname);
         }
         my $msg = Mail::Message->build(
             From    => $from,
-            To      => $user_group->user->email,
+            To      => $user->email,
             Subject => "Admonitor alarm",
             data    => "$this_body",
         )->send(via => 'sendmail', sendmail_options => [-f => $from]);
