@@ -175,10 +175,10 @@ sub alarm {}
 
 sub send_alarm
 {   my ($self, $error) = @_;
-    my $host = $self->schema->resultset('Host')->find(
-        { id => $self->host_id, silenced => 0 },
+    my $host = $self->schema->resultset('Host')->search(
+        { 'me.id' => $self->host_id, silenced => 0 },
         { prefetch => { group => { user_groups => 'user' } } },
-    );
+    )->next or return;
     my $hostname = $host->name;
     my $group = $host->group;
     my $body = "An alarm was received for host $hostname: $error";
