@@ -101,7 +101,7 @@ sub _build_timers
                             host => $host->name;
                     },
                     on_read_error => sub {
-                        warning "Failed to read data from {host} for admonitor ping",
+                        warning __x"Failed to read data from {host} for admonitor ping",
                             host => $host->name;
                     },
                 );
