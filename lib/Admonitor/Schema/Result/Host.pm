@@ -52,6 +52,13 @@ __PACKAGE__->has_many(
 
 __PACKAGE__->belongs_to(
   'group' => 'Admonitor::Schema::Result::Group',
-  {'foreign.id'=>'self.group_id'});
+  {'foreign.id'=>'self.group_id'},
+  {
+    is_deferrable => 1,
+    join_type     => "LEFT",
+    on_delete     => "NO ACTION",
+    on_update     => "NO ACTION",
+  },
+);
 
 1;
