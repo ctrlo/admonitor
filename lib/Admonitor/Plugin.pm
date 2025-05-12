@@ -176,9 +176,12 @@ sub alarm {}
 sub send_alarm
 {   my ($self, $error) = @_;
     my $host = $self->schema->resultset('Host')->search(
-        { 'me.id' => $self->host_id, silenced => 0 },
+        { 'me.id' => $self->host_id },
         { prefetch => { group => { user_groups => 'user' } } },
-    )->next or return;
+    )->next
+        # Safety check in case of problems retrieving host
+        or panic __x"Host {id} not found", id => $self->host_id;
+    return if $host->silenced;
     my $hostname = $host->name;
     my $group = $host->group;
     my $body = "An alarm was received for host $hostname: $error";
