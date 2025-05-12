@@ -52,6 +52,7 @@ while (1)
     # for a long time and there might be a large number.
     try { _run() } accept => 'ERROR,FAULT,FAILURE,PANIC', on_die => 'PANIC';
     $@->reportAll(is_fatal => 0);
+    notice __"Restarting admonitor service after failure";
     sleep 60; # Throttle continuous exceptions
 }
 
