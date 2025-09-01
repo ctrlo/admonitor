@@ -78,7 +78,12 @@ sub _process
     }
 
     my $fp_rs = rset('Fingerprint')->search({
-        fingerprint => $fingerprint,
+        'me.fingerprint'       => $fingerprint,
+        'user_groups.group_id' => $host->group_id,
+    },{
+        join => {
+            user => 'user_groups',
+        },
     });
     rset('SSHLogin')->create({
         host_id     => $host->id,
