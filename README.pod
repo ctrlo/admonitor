@@ -85,6 +85,14 @@ Quick and dirty installation instructions for Debian.
     libdatetime-format-strptime-perl libmoox-types-mooselike-perl libconfig-any-perl \
     libjson-perl liblog-report-perl libyaml-perl libmail-box-perl libcpanel-json-xs-perl
 
+  # Server
+  apt-get install -y libnet-frame-perl libmath-numbercruncher-perl libnet-async-ping-perl \
+    libnet-async-http-perl libio-async-perl libio-socket-timeout-perl libdbix-class-migration-perl \
+    libpod-parser-perl libdbix-class-helpers-perl libdbd-mysql-perl libnet-telnet-perl \
+    libipc-run-perl libio-async-ssl-perl libdancer2-perl libdancer2-plugin-dbic-perl \
+    libmoox-singleton-perl libnet-async-smtp-perl liblinux-inotify2-perl libanyevent-perl \
+    mariadb-server
+
   # Install Admonitor modules
   cp -a lib/Admonitor /usr/local/share/perl/a.b.c/
 
@@ -94,6 +102,11 @@ Quick and dirty installation instructions for Debian.
   # Install service
   cp etc/admonitor.service /etc/systemd/system/
   systemctl enable admonitor.service
+
+  # Install checker on server
+  cp etc/admonitor-checker.service /etc/systemd/system/
+
+  # Syslog on server
 
   # Add required users
   groupadd --system admonitor
@@ -167,7 +180,7 @@ but at the moment it is a cron job that runs periodically.
 Create an admonitor user, and add a cron job for the get-agent-data script. For
 example, to collect the data every 15 minutes:
 
-  5,20,35,55 * * * * DANCER_ENVIRONMENT=production /srv/admonitor/bin/get-agent-data.pl
+  5,20,35,50 * * * * DANCER_ENVIRONMENT=production /srv/admonitor/bin/get-agent-data.pl
 
 This will contact each host, collect the statistics, and save to the database
 on the controller.
