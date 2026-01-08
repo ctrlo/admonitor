@@ -78,6 +78,8 @@ admonitor:
         recipient: admonitor@example.com
         SSL_cert_file: /etc/ssl/certs/example.com.pem
         SSL_key_file: /etc/ssl/private/example.com.key
+      AdmonitorPing:
+        enabled: 1
 
 plugins:
   DBIC:
