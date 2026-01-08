@@ -72,7 +72,7 @@ get '/data/?:plugin' => require_login sub {
     );
     my $data = $p->graph_data;
 
-    header "Cache-Control" => "max-age=0, must-revalidate, private";
+    response_header "Cache-Control" => "max-age=0, must-revalidate, private";
     content_type 'application/json';
     encode_json($data);
 };
