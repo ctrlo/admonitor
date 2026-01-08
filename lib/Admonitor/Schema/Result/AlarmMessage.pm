@@ -24,7 +24,7 @@ __PACKAGE__->add_columns(
     plugin => {
         data_type           => 'varchar',
         size                => 50,
-        is_nullable         => 0,
+        is_nullable         => 1,
     },
 );
 

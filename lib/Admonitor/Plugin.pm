@@ -191,12 +191,15 @@ sub send_alarm
     foreach my $user (@users)
     {
         my $this_body = $body;
+        # Allow messages to be generic for any plugin, or for a specific plugin
         my $alarm_message = $self->schema->resultset('AlarmMessage')->search(
-            { plugin => $self->name }
+            { plugin => [$self->name, undef] }
         );
+        # Filter by group if the server is in one
         $alarm_message = $alarm_message->search({ group_id => $group->id })
             if $group;
-        if (my $message = $alarm_message->next)
+        # Allow multiple custom messages
+        foreach my $message ($alarm_message->all)
         {
             $this_body .= "\n\n" . __x($message->message_suffix, host => $hostname);
         }
