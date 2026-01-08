@@ -92,12 +92,13 @@ sub _build_io_object
     my $inotify = new Linux::Inotify2
         or fault "unable to create new inotify object";
 
+    my $mgr    = Mail::Box::Manager->new;
+
     $inotify->watch ("$mbox/new", IN_CREATE, sub {
         # Not needed, kept for reference
         my $e = shift;
         my $filename = $e->fullname;
 
-        my $mgr    = Mail::Box::Manager->new;
         # remove_when_empty parameter only needed for mbox file
         my $folder = $mgr->open(folder => $mbox, access => 'rw', remove_when_empty => 0);
         my $count = 0;
