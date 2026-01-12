@@ -196,7 +196,7 @@ sub send_alarm
             { plugin => [$self->name, undef] }
         );
         # Filter by group if the server is in one
-        $alarm_message = $alarm_message->search([ group_id => $group->id, undef ])
+        $alarm_message = $alarm_message->search({ group_id => [ $group->id, undef ] })
             if $group;
         # Allow multiple custom messages
         foreach my $message ($alarm_message->all)
