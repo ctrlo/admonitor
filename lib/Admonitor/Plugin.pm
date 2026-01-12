@@ -195,9 +195,10 @@ sub send_alarm
         my $alarm_message = $self->schema->resultset('AlarmMessage')->search(
             { plugin => [$self->name, undef] }
         );
-        # Filter by group if the server is in one
-        $alarm_message = $alarm_message->search({ group_id => [ $group->id, undef ] })
-            if $group;
+        # Filter by group as required
+        my @groups = (undef); # Always include messages without group
+        push @groups, $group->id if $group; # Also include server group if applicable
+        $alarm_message = $alarm_message->search({ group_id => [@groups] });
         # Allow multiple custom messages
         foreach my $message ($alarm_message->all)
         {
