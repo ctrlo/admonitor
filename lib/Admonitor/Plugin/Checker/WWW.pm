@@ -31,7 +31,7 @@ use Log::Report 'admonitor';
 use Net::Async::HTTP;
 use Math::NumberCruncher;
 use Scalar::Util qw(weaken);
-use Net::SSLeay 1.88 # Contains memory leak fix;
+use Net::SSLeay 1.88; # Contains memory leak fix
 
 has stattypes => (
     is      => 'ro',
@@ -84,50 +84,32 @@ sub _build_failcount
     return $failcount;
 }
 
-has timers => (
-    is  => 'lazy',
-    isa => HashRef,
-);
-
-sub _build_timers
-{   my $self = shift;
+sub checker_future
+{   my ($self, $timer, $host) = @_;
     weaken $self;
-    my $timers = {};
-    foreach my $host (@{$self->hosts})
-    {
-        $timers->{$host->id} = IO::Async::Timer::Periodic->new(
-            interval       => 60,
-            first_interval => $self->first_interval,
-            on_tick        => sub {
-                my $timer = shift;
-                my $t0 = [Time::HiRes::gettimeofday];
-                my $host_name = $host->name;
-                $timer->adopt_future(
-                    $self->io_object->GET('https://' . $host_name)
-                        ->on_done(sub {
-                            my $response = shift;
-                            if ($response->is_success)
-                            {
-                                push @{$self->results->{$host->id}},
-                                    Time::HiRes::tv_interval($t0);
-                            }
-                            else {
-                                assert __x"Failed to make WWW request to {host}: unexpected response: {code}",
-                                    host => $host_name, code => $response->code;
-                                $self->failcount->{$host->id}++;
-                            }
-                        })
-                        ->on_fail(sub {
-                            my $failure = shift;
-                            assert "Failed to make WWW request to $host_name: $failure";
-                            $self->failcount->{$host->id}++;
-                        })
-                        ->else_done
-                );
-           },
-        ),
-    };
-    return $timers;
+    my $t0 = [Time::HiRes::gettimeofday];
+    my $host_name = $host->name;
+
+    $self->io_object->GET('https://' . $host_name)
+        ->on_done(sub {
+            my $response = shift;
+            if ($response->is_success)
+            {
+                push @{$self->results->{$host->id}},
+                    Time::HiRes::tv_interval($t0);
+            }
+            else {
+                assert __x"Failed to make WWW request to {host}: unexpected response: {code}",
+                    host => $host_name, code => $response->code;
+                $self->failcount->{$host->id}++;
+            }
+        })
+        ->on_fail(sub {
+            my $failure = shift;
+            assert "Failed to make WWW request to $host_name: $failure";
+            $self->failcount->{$host->id}++;
+        })
+        ->else_done;
 }
 
 sub write

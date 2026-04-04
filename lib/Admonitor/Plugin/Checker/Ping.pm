@@ -50,6 +50,10 @@ has stattypes => (
     },
 );
 
+has '+interval' => (
+    default => 1,
+);
+
 has io_object => (
     is => 'lazy',
 );
@@ -85,35 +89,17 @@ sub _build_failcount
     return $failcount;
 }
 
-has timers => (
-    is  => 'lazy',
-    isa => HashRef,
-);
-
-sub _build_timers
-{   my $self = shift;
+sub checker_future
+{   my ($self, $timer, $host) = @_;
     weaken $self;
-    my $timers = {};
-    foreach my $host (@{$self->hosts})
-    {
-        $timers->{$host->id} = IO::Async::Timer::Periodic->new(
-            interval       => 1,
-            first_interval => $self->first_interval,
-            on_tick        => sub {
-                $timers->{$host->id}->adopt_future(
-                    $self->io_object->ping($host->name)
-                        ->on_done(sub {
-                            push @{$self->results->{$host->id}}, $_[0];
-                        })
-                        ->on_fail(sub {
-                            $self->failcount->{$host->id}++;
-                        })
-                        ->else_done
-                );
-           },
-        ),
-    };
-    return $timers;
+    $self->io_object->ping($host->name)
+        ->on_done(sub {
+            push @{$self->results->{$host->id}}, $_[0];
+        })
+        ->on_fail(sub {
+            $self->failcount->{$host->id}++;
+        })
+        ->else_done
 }
 
 sub write

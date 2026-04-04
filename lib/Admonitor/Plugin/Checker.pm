@@ -20,6 +20,7 @@ package Admonitor::Plugin::Checker;
 
 use Admonitor::Config;
 use DateTime;
+use Future::Utils qw/fmap_void/;
 use Log::Report;
 use Moo;
 use MooX::Types::MooseLike::Base qw/ArrayRef Int/;
@@ -45,6 +46,12 @@ sub _build_config
 has loop => (
     is       => 'ro',
     required => 1,
+);
+
+has interval => (
+    is      => 'ro',
+    isa     => Int,
+    default => 60,
 );
 
 has first_interval => (
@@ -108,12 +115,28 @@ sub datetime
 sub start
 {   my $self = shift;
 
-    foreach (@{$self->hosts})
-    {
-        my $timer = $self->timers->{$_->id};
-        $timer->start;
-        $self->add_notifier($timer);
-    }
+    my $timer = IO::Async::Timer::Periodic->new(
+       interval => $self->interval,
+       on_tick => sub {
+            my $timer = shift;
+            # Use fmap to ensure that not too many checkers run concurrently,
+            # which can result in inaccurate results as too much processing has
+            # to be done at the same time affecting timing measurement. A
+            # concurrency of 5 seems to work well - the higher the number the
+            # more concurrency and the quicker all results are produced (but
+            # less accuracy); the lower the number the less concurrency and the
+            # more accurate the results (but taking longer).
+            $timer->adopt_future(
+                fmap_void { $self->checker_future($timer, $_) }
+                    foreach    => [@{$self->hosts}],
+                    concurrent => 5
+            );
+       },
+    );
+
+    $timer->start;
+    $self->add_notifier($timer);
+
     if ($self->can('io_object'))
     {
         my $notifier = $self->io_object;

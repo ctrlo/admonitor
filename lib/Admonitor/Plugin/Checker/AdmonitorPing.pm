@@ -34,7 +34,6 @@ use Scalar::Util qw(weaken);
 use Time::HiRes qw/time/;
 
 my $timeout = 10;
-my $interval = 5;
 
 has stattypes => (
     is      => 'ro',
@@ -47,6 +46,10 @@ has stattypes => (
             },
         ],
     },
+);
+
+has '+interval' => (
+    default => 5,
 );
 
 has results => (
@@ -75,106 +78,90 @@ sub _build_failcount
     return $failcount;
 }
 
-has timers => (
-    is  => 'lazy',
-    isa => HashRef,
-);
-
-sub _build_timers
-{   my $self = shift;
+sub checker_future
+{   my ($self, $timer, $host) = @_;
     weaken $self;
-    my $timers = {};
-    foreach my $host (@{$self->hosts})
-    {
-        $timers->{$host->id} = IO::Async::Timer::Periodic->new(
-            interval => $interval,
-            first_interval => $self->first_interval,
-            on_tick => sub {
-                my $stream = IO::Async::Stream->new(
-                    on_read => sub {
-                        return 0;
-                    },
-                    # Not sure if the folllowing error handlers do anything with the
-                    # async code below
-                    on_write_error => sub {
-                        warning __x"Failed to write data to {host} for admonitor ping",
-                            host => $host->name;
-                    },
-                    on_read_error => sub {
-                        warning __x"Failed to read data from {host} for admonitor ping",
-                            host => $host->name;
-                    },
-                );
-                $self->add_notifier($stream);
+    my $stream = IO::Async::Stream->new(
+        on_read => sub {
+            return 0;
+        },
+        # Not sure if the folllowing error handlers do anything with the
+        # async code below
+        on_write_error => sub {
+            warning __x"Failed to write data to {host} for admonitor ping",
+                host => $host->name;
+        },
+        on_read_error => sub {
+            warning __x"Failed to read data from {host} for admonitor ping",
+                host => $host->name;
+        },
+    );
+    $self->add_notifier($stream);
 
-                my $connect_future = $stream->connect(
-                    addr => {
-                        family   => "inet",
-                        socktype => "stream",
-                        port     => 9098,
-                        ip       => $host->name,
-                    },
-                    on_fail => sub {
-                        warning __x"Failed to connect to {host}", host => $host->name;
-                    },
-                );
+    my $connect_future = $stream->connect(
+        addr => {
+            family   => "inet",
+            socktype => "stream",
+            port     => 9098,
+            ip       => $host->name,
+        },
+        on_fail => sub {
+            warning __x"Failed to connect to {host}", host => $host->name;
+        },
+    );
 
-                $connect_future = Future->wait_any(
-                    $connect_future,
-                    $self->loop->timeout_future(after => $timeout)->transform(fail => sub {
-                        warning __x"Timed out connecting for admonitor ping from {host}",
-                            host => $host->name;
-                    })
-                );
+    $connect_future = Future->wait_any(
+        $connect_future,
+        $self->loop->timeout_future(after => $timeout)->transform(fail => sub {
+            warning __x"Timed out connecting for admonitor ping from {host}",
+                host => $host->name;
+        })
+    );
 
-                my $start = time;
-                $timers->{$host->id}->adopt_future($connect_future
-                    ->then(sub {
-                            trace __x"Admonitor ping connected to {host}", host => $host->name;
-                    })
-                    ->on_done(sub {
-                        my $response = shift;
-                        trace __x"Writing to {host} for admonitor ping",
-                            host => $host->name;
-                        $stream->write("Ping\n", on_error => sub {
-                            my ($self, $err) = @_;
-                            warning __x"Failed to write data to {host} for admonitor ping: {err}",
-                                host => $host->name, err => $err;
-                        });
-                    })
-                    ->on_fail(sub {
-                        warning __x"Failed to connect to {host} for admonitor ping",
-                            host => $host->name;
-                        $self->failcount->{$host->id}++;
-                    })
-                    ->then(sub {
-                        trace __x"Admonitor ping waiting for data from {host}", host => $host->name;
-                        my $future_read = $stream->read_until("\n");
-                        # Add timeout
-                        Future->wait_any($future_read,
-                            $self->loop->timeout_future(after => $timeout)
-                            ->transform(fail => sub {
-                                warning __x"Timed out waiting for admonitor ping response from {host}",
-                                    host => $host->name;
-                            }),
-                        );
-                    })->then(sub {
-                        my $buffer = shift;
-                        my $duration = time - $start;
-                        if ($buffer =~ /pong/i)
-                        {
-                            trace __x"Received admonitor ping for host {host} time {time}",
-                                host => $host->name, time => $duration;
-                            push @{$self->results->{$host->id}}, $duration;
-                        }
-                    })->followed_by(sub {
-                        $self->remove_notifier($stream);
-                    })->else_done
-                );
-            },
-        );
-    };
-    return $timers;
+    my $start = time;
+    $timer->adopt_future($connect_future
+        ->then(sub {
+                trace __x"Admonitor ping connected to {host}", host => $host->name;
+        })
+        ->on_done(sub {
+            my $response = shift;
+            trace __x"Writing to {host} for admonitor ping",
+                host => $host->name;
+            $stream->write("Ping\n", on_error => sub {
+                my ($self, $err) = @_;
+                warning __x"Failed to write data to {host} for admonitor ping: {err}",
+                    host => $host->name, err => $err;
+            });
+        })
+        ->on_fail(sub {
+            warning __x"Failed to connect to {host} for admonitor ping",
+                host => $host->name;
+            $self->failcount->{$host->id}++;
+        })
+        ->then(sub {
+            trace __x"Admonitor ping waiting for data from {host}", host => $host->name;
+            my $future_read = $stream->read_until("\n");
+            # Add timeout
+            Future->wait_any($future_read,
+                $self->loop->timeout_future(after => $timeout)
+                ->transform(fail => sub {
+                    warning __x"Timed out waiting for admonitor ping response from {host}",
+                        host => $host->name;
+                }),
+            );
+        })->then(sub {
+            my $buffer = shift;
+            my $duration = time - $start;
+            if ($buffer =~ /pong/i)
+            {
+                trace __x"Received admonitor ping for host {host} time {time}",
+                    host => $host->name, time => $duration;
+                push @{$self->results->{$host->id}}, $duration;
+            }
+        })->followed_by(sub {
+            $self->remove_notifier($stream);
+        })->else_done
+    );
 }
 
 sub write

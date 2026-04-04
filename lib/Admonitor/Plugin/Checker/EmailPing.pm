@@ -191,61 +191,50 @@ sub _get_smtp
     $smtp;
 }
 
-sub _build_timers
-{   my $self = shift;
+sub checker_future
+{   my ($self, $timer, $host) = @_;
     weaken $self;
-    my $timers = {};
-    foreach my $host (@{$self->hosts})
-    {
-        $timers->{$host->id} = IO::Async::Timer::Periodic->new(
-            interval       => 60,
-            first_interval => $self->first_interval,
-            on_tick        => sub {
-                my $timer = shift;
-                my $host_id = $host->id;
-                my $token = Session::Token->new(length => 32)->get;
-                my $msg = Mail::Message->build(
-                    To             => $self->email_recipient,
-                    From           => $self->email_sender,
-                    Subject        => "Admonitor test",
-                    data           => "$host_id TOKEN $token",
-                );
-                my $msgtext  = $msg->string;
-                my ($sender) = $msg->sender;
-                my ($to)     = $msg->to;
-                my $msgid    = $msg->messageId;
-                my $smtp     = $self->_get_smtp($host);
-                $timer->adopt_future(
-                    $smtp->connected
-                        ->then(sub {
-                            $smtp->send(to => $to->address, from => $sender->address, data => $msgtext);
-                        })
-                        ->on_done(sub {
-                            my $response = shift;
-                            trace __x"Sent token message to host {host} with msgid {msgid}",
-                                host => $host->name, msgid => $msgid;
-                            $self->results->{$host->id}->{$token} = {
-                                sent  => time,
-                                msgid => $msgid,
-                            };
-                        })
-                        ->on_fail(sub {
-                            # Seems to return different parameters depending on
-                            # context. See calls to fail() in Protocol::SMTP::Client
-                            # So print everything:
-                            my $error = join '; ', @_;
-                            warning __x"Failed to send email {msgid} to host {host}: {error}",
-                                msgid => $msgid, host => $host->name, error => $error;
-                            $self->failcount->{$host->id}++;
-                        #})->then_with_f(sub {
-                        })->on_ready(sub {
-                            $self->remove_notifier($smtp);
-                        })->else_done
-                    );
-            },
-        ),
-    };
-    return $timers;
+
+    my $host_id = $host->id;
+    my $token = Session::Token->new(length => 32)->get;
+    my $msg = Mail::Message->build(
+        To             => $self->email_recipient,
+        From           => $self->email_sender,
+        Subject        => "Admonitor test",
+        data           => "$host_id TOKEN $token",
+    );
+    my $msgtext  = $msg->string;
+    my ($sender) = $msg->sender;
+    my ($to)     = $msg->to;
+    my $msgid    = $msg->messageId;
+    my $smtp     = $self->_get_smtp($host);
+    $timer->adopt_future(
+        $smtp->connected
+            ->then(sub {
+                $smtp->send(to => $to->address, from => $sender->address, data => $msgtext);
+            })
+            ->on_done(sub {
+                my $response = shift;
+                trace __x"Sent token message to host {host} with msgid {msgid}",
+                    host => $host->name, msgid => $msgid;
+                $self->results->{$host->id}->{$token} = {
+                    sent  => time,
+                    msgid => $msgid,
+                };
+            })
+            ->on_fail(sub {
+                # Seems to return different parameters depending on
+                # context. See calls to fail() in Protocol::SMTP::Client
+                # So print everything:
+                my $error = join '; ', @_;
+                warning __x"Failed to send email {msgid} to host {host}: {error}",
+                    msgid => $msgid, host => $host->name, error => $error;
+                $self->failcount->{$host->id}++;
+            #})->then_with_f(sub {
+            })->on_ready(sub {
+                $self->remove_notifier($smtp);
+            })->else_done
+    );
 }
 
 my $alarm_seconds = 900;
