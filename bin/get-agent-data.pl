@@ -53,10 +53,21 @@ foreach my $host (@hosts)
     }
 }
 
-# Remove stats over one month old
-my $month = DateTime->now->subtract(months => 1);
+# Remove old stats. The "Checker" stats are far more useful to keep longer, as
+# they are more likely to be used for performance queries (e.g. KPIs) whereas
+# the internal agent figures are more useful for transitory system
+# investigation.
+# Keep checker stats for one year
+my $delete_from = DateTime->now->subtract(months => 12);
 rset('Statval')->search({
-    datetime => { '<' => schema->storage->datetime_parser->format_datetime($month) },
+    plugin   => { -like => 'Checker::%' },
+    datetime => { '<' => schema->storage->datetime_parser->format_datetime($delete_from) },
+})->delete;
+# Keep agent stats for one year
+$delete_from = DateTime->now->subtract(months => 1);
+rset('Statval')->search({
+    plugin   => { -like => 'Agent::%' },
+    datetime => { '<' => schema->storage->datetime_parser->format_datetime($delete_from) },
 })->delete;
 
 
