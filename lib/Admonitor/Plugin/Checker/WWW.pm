@@ -55,6 +55,9 @@ sub _build_io_object
     my $ua = Net::Async::HTTP->new(
         fail_on_error => 1,
         timeout       => 5,
+        # Count a redirect as a success (see comments below) to ensure accurate
+        # timing
+        max_redirects => 0,
     );
 }
 
@@ -93,7 +96,12 @@ sub checker_future
     $self->io_object->GET('https://' . $host_name)
         ->on_done(sub {
             my $response = shift;
-            if ($response->is_success)
+            # Count a redirect as a success, on the basis that many web hosts
+            # perform a redirect (e.g. to a login screen) or to another host
+            # (if the host name requested is not the corect one). From
+            # experience, it is very unlikely that a redirect is actually the
+            # sign of failure.
+            if ($response->is_success || $response->is_redirect)
             {
                 push @{$self->results->{$host->id}},
                     Time::HiRes::tv_interval($t0);
