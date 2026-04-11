@@ -64,7 +64,7 @@ my $now = DateTime->now->strftime("%Y%m%d-%T");
 #    last if defined $file;
 #
 
-umask 0027; # Don't allow any user to see file as it's written
+umask 0007; # Don't allow any user to see file as it's written
 
 # Use the index director to ensure unique files. Empty files are created here
 # to "hold" the name, and deleted on completion.
@@ -76,7 +76,7 @@ for( ; ; $unique++ )
 
     # O_EXCL not safe over NFS3, but that does not really hurt because
     # usually only one mailrobot will be active.
-    $file = IO::File->new("$queue/$filename", O_RDWR|O_CREAT|O_EXCL); #, S_IWUSR|S_IRUSR);
+    $file = IO::File->new("$queue/$filename", O_RDWR|O_CREAT|O_EXCL,S_IWUSR);
 
     last if defined $file;
 
