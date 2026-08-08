@@ -58,7 +58,7 @@ sub write_agent
 sub alarm
 {   my ($self, $host, $data) = @_;
     my $realusedper = realusedper($data->{realfreeper});
-    my $limit = $self->thresholds->{realusedper}->{$self->host_id}
+    my $limit = $self->thresholds->{realusedper}->{$host->id}
         // 80;
     $self->send_alarm($host, "Real used memory greater than $limit% ($realusedper%)")
         if $realusedper && $realusedper > $limit;

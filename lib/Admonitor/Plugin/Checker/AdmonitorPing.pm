@@ -181,7 +181,7 @@ sub write_checker
         if (my $sent = @{$self->results->{$host->id}} + $failcount)
         {
             my $failavg = int (($failcount / $sent) * 100);
-            my $limit = $self->thresholds->{fail_percent}->{$self->host_id}
+            my $limit = $self->thresholds->{fail_percent}->{$host->id}
                 // 20;
             $self->send_alarm($host, "Admonitor failure higher than 20% ($failavg%)")
                 if $failavg > $limit;

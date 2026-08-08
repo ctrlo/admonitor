@@ -69,7 +69,7 @@ sub alarm
 {   my ($self, $host, $data) = @_;
     my $usage = $data->{diskusage};
     my $sent;
-    my $limit = $self->thresholds->{usageper}->{$self->host_id}
+    my $limit = $self->thresholds->{usageper}->{$host->id}
         // 75;
     foreach my $disk (keys %$usage)
     {
