@@ -239,7 +239,7 @@ sub checker_future
 
 my $alarm_seconds = 900;
 
-sub write_checkr
+sub write_checker
 {   my $self = shift;
 
     foreach my $host (@{$self->hosts})
