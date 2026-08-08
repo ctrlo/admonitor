@@ -4,6 +4,7 @@ use strict;
 use warnings;
 
 use Admonitor::Hosts;
+use DateTime;
 use DateTime::Format::Strptime;
 use Log::Report 'admonitor';
 use Mail::Message;
@@ -11,30 +12,20 @@ use Moo;
 
 use overload '""'  => '_as_string';
 
-# datetime and host_id are used to store the relevant values
-# for the record about to be written. They are not passed in
-# with write_single() so that the values are not needed by
-# the plugin (keeps the plugin code to a minimum).
-has datetime => (
-    is => 'rw',
-);
-
-has host_id => (
-    is => 'rw',
-);
-
-# Used for logging
-has host_name => (
-    is => 'ro',
-    default => sub { 'UNKNOWN' },
-);
-
 sub write_single
 {   my ($self, %options) = @_;
 
     my $stattype = $options{stattype}
         or panic __x"stattype parameter missing for write_single in {plugin}",
             plugin => $self->name;
+
+    my $host = $options{host}
+        or panic __x"host parameter missing for write_single in {plugin}",
+            plugin => $self->name;
+
+    # Agents should pass in the time the reading was taken, checkers should
+    # just default to the current time
+    my $datetime = $options{datetime} || DateTime->now;
 
     # Work out what value this particular stattype is
     my %types = map { $_->{name} => $_ } @{$self->stattypes};
@@ -47,13 +38,13 @@ sub write_single
     {
         warning __x"Not writing undefined value for '{stattype}' in plugin '{plugin}' on host '{host}'. ".
             "Use allow_null option to override.",
-            stattype => $stattype, plugin => $self->name, host => $self->host_name;
+            stattype => $stattype, plugin => $self->name, host => $host->name;
         return;
     }
     my $type_write = $stattype->{type};
     $self->schema->resultset('Statval')->create({
-        datetime    => $self->datetime,
-        host        => $self->host_id,
+        datetime    => $datetime,
+        host        => $host->id,
         plugin      => $self->name,
         stattype    => $stattype->{name},
         param       => $options{param},
@@ -174,13 +165,7 @@ sub _build_graph_data
 sub alarm {}
 
 sub send_alarm
-{   my ($self, $error) = @_;
-    my $host = $self->schema->resultset('Host')->search(
-        { 'me.id' => $self->host_id },
-        { prefetch => { group => { user_groups => 'user' } } },
-    )->next
-        # Safety check in case of problems retrieving host
-        or panic __x"Host {id} not found", id => $self->host_id;
+{   my ($self, $host, $error) = @_;
     return if $host->silenced;
     my $hostname = $host->name;
     my $group = $host->group;

@@ -135,24 +135,21 @@ sub do_host
         eval "require $name";
         panic $@ if $@; # Report somewhere useful if checker can't be loaded
         $name->new(
-            schema      => $schema,
-            host_id     => $host->id,
-            host_name   => $host->name,
+            schema => $schema,
         );
     } keys %{config->{admonitor}->{plugins}->{agents}};
 
     foreach my $record (@{$serverdata->{records}})
     {
-        my $time    = $record->{datetime};
+        my $datetime = $record->{datetime};
 
         foreach my $plugin (@plugins)
         {
             my $data = $record->{$plugin->name}
                 or next;
-            $plugin->datetime($time);
-            $plugin->write($data);
+            $plugin->write_agent($host, $datetime, $data);
             $alarms->{$plugin} = 1
-                if !$alarms->{$plugin} && $plugin->alarm($data);
+                if !$alarms->{$plugin} && $plugin->alarm($host, $data);
         }
     }
 

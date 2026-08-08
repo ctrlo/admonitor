@@ -239,8 +239,8 @@ sub checker_future
 
 my $alarm_seconds = 900;
 
-sub write
-{   my ($self, $data) = @_;
+sub write_checkr
+{   my $self = shift;
 
     foreach my $host (@{$self->hosts})
     {
@@ -251,7 +251,7 @@ sub write
         if (!$total_sent)
         {
             my $hostname = $host->name;
-            $self->send_alarm("Failed to send any test emails for host $hostname");
+            $self->send_alarm($host, "Failed to send any test emails for host $hostname");
             next;
         }
 
@@ -286,26 +286,26 @@ sub write
             }
         }
 
-        $self->host_id($host->id);
-
         # Check delays. $avg written as undef later if none received
         my $avg = int Math::NumberCruncher::Mean(\@times);
-        $self->send_alarm("Email delivery took $avg seconds")
+        $self->send_alarm($host, "Email delivery took $avg seconds")
             if $avg > $alarm_seconds;
 
         # Check complete failures
         my $success_avg = int (($received_count / $total_sent) * 100);
-        $self->send_alarm("Successful email deliveries less than 75% ($success_avg%)")
+        $self->send_alarm($host, "Successful email deliveries less than 75% ($success_avg%)")
             if $success_avg <= 75;
 
         $self->write_single(
             stattype   => 'delay',
+            host       => $host,
             value      => @times ? $avg : undef, # Can be undef if none received successfully
             failcount  => $self->failcount->{$host->id},
             allow_null => 1,
         );
         $self->write_single(
             stattype   => 'received_count',
+            host       => $host,
             value      => $received_count,
         );
 

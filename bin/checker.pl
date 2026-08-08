@@ -108,7 +108,7 @@ sub _run
         on_tick  => sub {
             foreach my $checker (@{$checkers->all})
             {
-                $checker->write;
+                $checker->write_checker;
             }
        },
     );

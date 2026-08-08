@@ -57,25 +57,27 @@ sub read
     };
 }
 
-sub write
-{   my ($self, $data) = @_;
+sub write_agent
+{   my ($self, $host, $datetime, $data) = @_;
     my $value = $data->{backup_status};
     $self->write_single(
         stattype   => 'backup_status',
+        host       => $host,
+        datetime   => $datetime,
         value      => $value,
         allow_null => 1,
     );
 }
 
 sub alarm
-{   my ($self, $data) = @_;
+{   my ($self, $host, $data) = @_;
     my $status = $data->{backup_status};
-    return $self->send_alarm("No backup verification information")
+    return $self->send_alarm($host, "No backup verification information")
         if !$status;
     my $parsed = $self->parse_backup_status($status);
-    return $self->send_alarm("Backup verification failed: $status")
+    return $self->send_alarm($host, "Backup verification failed: $status")
         if !$parsed || !$parsed->{identical};
-    return $self->send_alarm("Backup verification not within 30 hours")
+    return $self->send_alarm($host, "Backup verification not within 30 hours")
         # Returns 30 hours for 30 hours and something, hence greater than or equal
         if DateTime->now->delta_ms($parsed->{time})->in_units('hours') >= 30;
 }

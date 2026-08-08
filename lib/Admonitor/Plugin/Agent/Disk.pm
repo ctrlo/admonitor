@@ -49,14 +49,16 @@ sub read
     };
 }
 
-sub write
-{   my ($self, $data) = @_;
+sub write_agent
+{   my ($self, $host, $datetime, $data) = @_;
 
     foreach my $disk (keys %{$data->{diskusage}})
     {
         my $value = $data->{diskusage}->{$disk};
         $self->write_single(
             stattype => 'usageper',
+            host     => $host,
+            datetime => $datetime,
             param    => $disk,
             value    => $value->{usageper},
         ) if $value->{usageper} > 0;
@@ -64,7 +66,7 @@ sub write
 }
 
 sub alarm
-{   my ($self, $data) = @_;
+{   my ($self, $host, $data) = @_;
     my $usage = $data->{diskusage};
     my $sent;
     my $limit = $self->thresholds->{usageper}->{$self->host_id}
@@ -72,7 +74,7 @@ sub alarm
     foreach my $disk (keys %$usage)
     {
         my $value = $usage->{$disk}->{usageper};
-        $sent ||= $self->send_alarm("Disk space usage for $disk greater than $limit% ($value%)")
+        $sent ||= $self->send_alarm($host, "Disk space usage for $disk greater than $limit% ($value%)")
             if $value && $value > $limit;
     }
     return $sent; # Return whether alarm has been sent to prevent duplicates

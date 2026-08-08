@@ -33,19 +33,21 @@ sub read {
     return { enabled => $success };
 }
 
-sub write {
-    my ($self, $data) = @_;
+sub write_agent
+{   my ($self, $host, $datetime, $data) = @_;
     $self->write_single(
         stattype => 'enabled',
+        host     => $host,
+        datetime => $datetime,
         value    => $data->{enabled},
     );
 }
 
-sub alarm {
-    my ($self, $data) = @_;
+sub alarm
+{   my ($self, $host, $data) = @_;
 
     if ( $data->{enabled} != 1 ) {
-        $self->send_alarm('UFW is not enabled');
+        $self->send_alarm($host, 'UFW is not enabled');
     }
 }
 

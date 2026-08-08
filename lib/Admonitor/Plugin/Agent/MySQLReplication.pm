@@ -65,8 +65,8 @@ sub read
     };
 }
 
-sub write
-{   my ($self, $data) = @_;
+sub write_agent
+{   my ($self, $host, $datetime, $data) = @_;
     foreach my $stattype (@{$self->stattypes})
     {
         my $name = $stattype->{name};
@@ -84,6 +84,8 @@ sub write
         }
         $self->write_single(
             stattype => $name,
+            host     => $host,
+            datetime => $datetime,
             param    => undef, # Not used
             value    => $value,
         );
@@ -91,11 +93,11 @@ sub write
 }
 
 sub alarm
-{   my ($self, $data) = @_;
+{   my ($self, $host, $data) = @_;
     if (exists $data->{replication_running})
     {
         my $exists = $data->{replication_running};
-        $self->send_alarm("MySQL replication has failed")
+        $self->send_alarm($host, "MySQL replication has failed")
             if !$exists;
     }
     if (exists $data->{replication_delay})
@@ -103,7 +105,7 @@ sub alarm
         my $limit = $self->thresholds->{replication_delay}->{$self->host_id}
             // 600;
         my $delay = $data->{replication_delay};
-        $self->send_alarm("MySQL replication is lagging by $delay seconds")
+        $self->send_alarm($host, "MySQL replication is lagging by $delay seconds")
             if defined $delay && $delay > $limit;
     }
 }

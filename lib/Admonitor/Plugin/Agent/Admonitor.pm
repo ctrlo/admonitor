@@ -41,19 +41,21 @@ has stattypes => (
     },
 );
 
-sub write
-{   my ($self, $data) = @_;
+sub write_agent
+{   my ($self, $host, $datetime, $data) = @_;
     my $value = $data->{error_message};
     $self->write_single(
         stattype => 'error_message',
+        host     => $host,
+        datetime => $datetime,
         value    => $value,
     );
 }
 
 sub alarm
-{   my ($self, $data) = @_;
+{   my ($self, $host, $data) = @_;
     my $message = $data->{error_message};
-    $self->send_alarm($message)
+    $self->send_alarm($host, $message)
         if $message;
 }
 

@@ -164,16 +164,16 @@ sub checker_future
     );
 }
 
-sub write
-{   my ($self, $data) = @_;
+sub write_checker
+{   my $self = shift;
 
     foreach my $host (@{$self->hosts})
     {
         my $failcount = $self->failcount->{$host->id};
         my $avg = Math::NumberCruncher::Mean($self->results->{$host->id});
-        $self->host_id($host->id);
         $self->write_single(
             stattype   => 'time',
+            host       => $host,
             value      => $avg,
             failcount  => $failcount,
             allow_null => 1,
@@ -183,7 +183,7 @@ sub write
             my $failavg = int (($failcount / $sent) * 100);
             my $limit = $self->thresholds->{fail_percent}->{$self->host_id}
                 // 20;
-            $self->send_alarm("Admonitor failure higher than 20% ($failavg%)")
+            $self->send_alarm($host, "Admonitor failure higher than 20% ($failavg%)")
                 if $failavg > $limit;
         }
         $self->failcount->{$host->id} = 0;

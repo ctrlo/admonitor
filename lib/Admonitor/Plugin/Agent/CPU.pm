@@ -75,19 +75,21 @@ sub read
     };
 }
 
-sub write
-{   my ($self, $data) = @_;
+sub write_agent
+{   my ($self, $host, $datetime, $data) = @_;
     $self->write_single(
         stattype => $_->{name},
+        host     => $host,
+        datetime => $datetime,
         value    => $data->{$_->{name}},
     ) foreach @{$self->stattypes};
 }
 
 sub alarm
-{   my ($self, $data) = @_;
+{   my ($self, $host, $data) = @_;
     my $use = $data->{user};
     my $limit = 95;
-    $self->send_alarm("User process CPU usage greater than $limit% ($use%)")
+    $self->send_alarm($host, "User process CPU usage greater than $limit% ($use%)")
         if $use && $use > $limit;
 }
 

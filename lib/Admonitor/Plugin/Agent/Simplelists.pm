@@ -95,19 +95,23 @@ sub read
     };
 }
 
-sub write
-{   my ($self, $data) = @_;
+sub write_agent
+{   my ($self, $host, $datetime, $data) = @_;
     foreach my $q (@queues)
     {
         my $queue = $q->{name};
         my $value = $data->{queues}->{$queue};
         $self->write_single(
             stattype => 'queue_count',
+            host     => $host,
+            datetime => $datetime,
             param    => $queue,
             value    => $value->{count},
         );
         $self->write_single(
             stattype   => 'queue_age',
+            host       => $host,
+            datetime   => $datetime,
             param      => $queue,
             value      => $value->{age},
             allow_null => 1,
@@ -116,20 +120,20 @@ sub write
 }
 
 sub alarm
-{   my ($self, $data) = @_;
+{   my ($self, $host, $data) = @_;
     foreach my $q (@queues)
     {
         my $queue     = $q->{name};
         # size
         my $threshold = $q->{size};
         my $total     = $data->{queues}->{$queue}->{count};
-        $self->send_alarm("More than $threshold files in $queue queue (total $total)")
+        $self->send_alarm($host, "More than $threshold files in $queue queue (total $total)")
             if $total > $threshold;
         # age
         $threshold = $q->{age};
         my $age = $data->{queues}->{$queue}->{age}
             or next;
-        $self->send_alarm("Files in $queue queue older than $threshold seconds (age $age)")
+        $self->send_alarm($host, "Files in $queue queue older than $threshold seconds (age $age)")
             if $age > $threshold;
     }
 }

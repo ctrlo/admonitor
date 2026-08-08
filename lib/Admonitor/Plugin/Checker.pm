@@ -105,13 +105,6 @@ sub _build_hosts
     \@hosts;
 }
 
-# Used in Agents for the datetime of each datum. For checkers, we
-# just use the current time whenever we write
-sub datetime
-{   my $self = shift;
-    DateTime->now;
-}
-
 sub start
 {   my $self = shift;
 

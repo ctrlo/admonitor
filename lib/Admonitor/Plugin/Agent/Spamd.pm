@@ -56,20 +56,22 @@ sub read
     };
 }
 
-sub write
-{   my ($self, $data) = @_;
+sub write_agent
+{   my ($self, $host, $datetime, $data) = @_;
     my $value = $data->{socket_exists};
     $self->write_single(
         stattype => 'socket_exists',
+        host     => $host,
+        datetime => $datetime,
         param    => undef, # Not used
         value    => $value,
     );
 }
 
 sub alarm
-{   my ($self, $data) = @_;
+{   my ($self, $host, $data) = @_;
     my $exists = $data->{socket_exists};
-    $self->send_alarm("Cannot connect to spamd socket")
+    $self->send_alarm($host, "Cannot connect to spamd socket")
         if !$exists;
 }
 

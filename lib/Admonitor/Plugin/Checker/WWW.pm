@@ -120,16 +120,16 @@ sub checker_future
         ->else_done;
 }
 
-sub write
-{   my ($self, $data) = @_;
+sub write_checker
+{   my $self = shift;
 
     foreach my $host (@{$self->hosts})
     {
         my $failcount = $self->failcount->{$host->id};
         my $avg = Math::NumberCruncher::Mean($self->results->{$host->id});
-        $self->host_id($host->id);
         $self->write_single(
             stattype   => 'time',
+            host       => $host,
             value      => $avg,
             failcount  => $failcount,
             allow_null => 1,
@@ -137,7 +137,7 @@ sub write
         if (my $sent = @{$self->results->{$host->id}} + $failcount)
         {
             my $failavg = int (($failcount / $sent) * 100);
-            $self->send_alarm("WWW failure higher than 25% ($failavg%)")
+            $self->send_alarm($host, "WWW failure higher than 25% ($failavg%)")
                 if $failavg > 25;
         }
         $self->failcount->{$host->id} = 0;

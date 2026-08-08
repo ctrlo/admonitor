@@ -60,32 +60,34 @@ sub read
     };
 }
 
-sub write
-{   my ($self, $data) = @_;
+sub write_agent
+{   my ($self, $host, $datetime, $data) = @_;
     my $value = $data->{backup_time};
     $self->write_single(
         stattype   => 'backup_time',
+        host       => $host,
+        datetime   => $datetime,
         value      => $value,
         allow_null => 1,
     );
 }
 
 sub alarm
-{   my ($self, $data) = @_;
+{   my ($self, $host, $data) = @_;
     my $time = $data->{backup_time};
     if (!$time)
     {
-        $self->send_alarm("No time retrieved for most recent Github backup");
+        $self->send_alarm($host, "No time retrieved for most recent Github backup");
         return;
     }
     my $modified = DateTime->from_epoch(epoch => $time);
     if (!$modified)
     {
-        $self->send_alarm("Unable to parse last backup epoch: $time");
+        $self->send_alarm($host, "Unable to parse last backup epoch: $time");
         return;
     }
     $modified > DateTime->now->subtract(days => 7)
-        or $self->send_alarm("Last Github backup was more than 7 days ago ($modified)");
+        or $self->send_alarm($host, "Last Github backup was more than 7 days ago ($modified)");
 }
 
 1;
