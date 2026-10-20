@@ -105,7 +105,8 @@ sub _build_io_object
         foreach my $msg ($folder->messages)
         {
             my $body = $msg->body->decoded;
-            if ($body =~ /^([0-9]+) TOKEN ([0-9a-z]{32})$/mi)
+            # Add equals sign to avoid triggering SpamAssassin BITCOIN rules
+            if ($body =~ /^([0-9]+) TOKEN=([0-9a-z]{32})$/mi)
             {
                 my $host_id = $1;
                 my $token   = $2;
@@ -201,7 +202,7 @@ sub checker_future
         To             => $self->email_recipient,
         From           => $self->email_sender,
         Subject        => "Admonitor test",
-        data           => "$host_id TOKEN $token",
+        data           => "$host_id TOKEN=$token",
     );
     my $msgtext  = $msg->string;
     my ($sender) = $msg->sender;
